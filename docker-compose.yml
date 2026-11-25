@@ -1,0 +1,69 @@
+# FitZone on the VPS: the API server and its own PostgreSQL database.
+#
+# Completely separate from every other project on the server:
+#   - its own private network ("fitzone"); not connected to Traefik or other apps
+#   - its own database container; the database is NOT reachable from outside
+#   - only the API is opened, on port API_PORT (default 4200)
+#
+# Secrets come from the .env file next to this file (copy .env.example).
+#
+#   docker compose up -d --build     start / update
+#   docker compose logs -f api       watch the server log
+#   docker compose down              stop (data is kept)
+
+name: fitzone
+
+services:
+  db:
+    image: postgres:18-alpine
+    container_name: fitzone-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: mygymera_prod
+      POSTGRES_USER: mygymera_app
+      POSTGRES_PASSWORD: ${DB_PASSWORD:?Set DB_PASSWORD in the .env file}
+    volumes:
+      - fitzone-db-data:/var/lib/postgresql
+    networks:
+      - fitzone
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U mygymera_app -d mygymera_prod"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  api:
+    build: ./backend
+    container_name: fitzone-api
+    restart: unless-stopped
+    init: true
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      PORT: 4000
+      PGHOST: db
+      PGPORT: 5432
+      PGDATABASE: mygymera_prod
+      PGUSER: mygymera_app
+      PGPASSWORD: ${DB_PASSWORD}
+      JWT_SECRET: ${JWT_SECRET:?Set JWT_SECRET in the .env file}
+      JWT_EXPIRES_IN: 7d
+      UPLOAD_DIR: uploads
+      PUBLIC_BASE_URL: ${PUBLIC_BASE_URL:-}
+    ports:
+      - "${API_PORT:-4200}:4000"
+    volumes:
+      - fitzone-uploads:/app/uploads
+    networks:
+      - fitzone
+
+networks:
+  fitzone:
+    name: fitzone
+
+volumes:
+  fitzone-db-data:
+    name: fitzone-db-data
+  fitzone-uploads:
+    name: fitzone-uploads

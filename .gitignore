@@ -1,0 +1,20 @@
+# Never upload secrets: every .env file stays on its own computer.
+.env
+.env.*
+!.env.example
+
+# Downloaded libraries (reinstalled with npm)
+node_modules/
+
+# Files people upload in the app (chat images, videos)
+backend/uploads/
+
+# Build output
+mobile/dist/
+mobile/.expo/
+mobile/web-build/
+
+# Logs and system files
+*.log
+.DS_Store
+Thumbs.db
