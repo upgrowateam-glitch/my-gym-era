@@ -1,0 +1,39 @@
+{
+  "expo": {
+    "name": "FitZone",
+    "slug": "my-gym-era",
+    "scheme": "mygymera",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "dark",
+    "backgroundColor": "#050607",
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.mygymera.app"
+    },
+    "android": {
+      "package": "com.mygymera.app",
+      "adaptiveIcon": {
+        "backgroundColor": "#050607",
+        "foregroundImage": "./assets/android-icon-foreground.png",
+        "backgroundImage": "./assets/android-icon-background.png",
+        "monochromeImage": "./assets/android-icon-monochrome.png"
+      },
+      "predictiveBackGestureEnabled": false
+    },
+    "web": {
+      "favicon": "./assets/favicon.png",
+      "name": "FitZone",
+      "backgroundColor": "#050607",
+      "shortName": "FitZone"
+    },
+    "plugins": [
+      "expo-router",
+      "expo-secure-store",
+      "expo-status-bar",
+      "expo-image",
+      "expo-font"
+    ]
+  }
+}

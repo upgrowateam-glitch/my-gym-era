@@ -1,0 +1,33 @@
+// Colour sets for each signed-in area (used by components/ui/UI.tsx).
+
+import type { Palette } from '@/components/ui/UI';
+import { client, staff } from './colors';
+
+/** Super Admin and Admin areas: dark navy with purple accent. */
+export const ADMIN: Palette = {
+  bg: staff.bg, card: staff.card, elevated: staff.elevated, border: '#2A3448',
+  text: staff.text, textSecondary: staff.textSecondary, accent: '#A66CFF', onAccent: '#FFFFFF',
+};
+
+/** Trainer area: dark navy with cyan accent. */
+export const TRAINER: Palette = {
+  bg: staff.bg, card: staff.card, elevated: staff.elevated, border: '#2A3448',
+  text: staff.text, textSecondary: staff.textSecondary, accent: staff.trainer, onAccent: '#04121A',
+};
+
+/** User (client) area: Neon Lime design. */
+export const USER: Palette = {
+  bg: client.bg, card: client.card, elevated: client.elevated, border: client.border,
+  text: client.text, textSecondary: client.textSecondary, accent: client.lime, onAccent: client.onLime,
+};
+
+/** Shared tab bar look for an area. */
+export function tabBarOptions(p: Palette) {
+  return {
+    headerShown: false,
+    tabBarActiveTintColor: p.accent,
+    tabBarInactiveTintColor: p.textSecondary,
+    tabBarStyle: { backgroundColor: p.card, borderTopColor: p.border },
+    sceneStyle: { backgroundColor: p.bg },
+  } as const;
+}

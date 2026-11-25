@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>MyGymEra Home</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&amp;family=Inter:wght@400;500;600&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "error-dim": "#d53d18",
+                        "outline-variant": "#414859",
+                        "surface-container-lowest": "#000000",
+                        "tertiary-fixed-dim": "#efc900",
+                        "background": "#070e1d",
+                        "on-primary": "#005d21",
+                        "surface-variant": "#1b263b",
+                        "on-secondary-container": "#ced0d9",
+                        "surface-container-low": "#0b1323",
+                        "on-primary-container": "#002a0a",
+                        "surface": "#070e1d",
+                        "outline": "#6e7588",
+                        "on-tertiary-fixed-variant": "#665500",
+                        "on-secondary-fixed": "#3c3f47",
+                        "primary-container": "#1db94d",
+                        "secondary-fixed": "#e0e2ec",
+                        "surface-bright": "#212c43",
+                        "on-tertiary-container": "#5b4b00",
+                        "on-error-container": "#ffd2c8",
+                        "on-surface": "#dfe5fa",
+                        "tertiary-dim": "#efc900",
+                        "primary": "#6ffb85",
+                        "inverse-surface": "#f9f9ff",
+                        "tertiary-container": "#ffd709",
+                        "inverse-primary": "#006e28",
+                        "error-container": "#b92902",
+                        "on-error": "#450900",
+                        "on-secondary": "#4f525a",
+                        "inverse-on-surface": "#4e5566",
+                        "primary-fixed-dim": "#60ec79",
+                        "secondary-fixed-dim": "#d2d4de",
+                        "surface-tint": "#6ffb85",
+                        "on-tertiary-fixed": "#453900",
+                        "primary-dim": "#60ec79",
+                        "on-tertiary": "#655400",
+                        "surface-container-highest": "#1b263b",
+                        "surface-container-high": "#161f33",
+                        "on-primary-fixed": "#004818",
+                        "primary-fixed": "#6ffb85",
+                        "tertiary-fixed": "#ffd709",
+                        "error": "#ff7351",
+                        "surface-container": "#11192b",
+                        "on-surface-variant": "#a4abbf",
+                        "tertiary": "#ffe792",
+                        "surface-dim": "#070e1d",
+                        "secondary-dim": "#d2d4de",
+                        "on-background": "#dfe5fa",
+                        "secondary": "#e0e2ec",
+                        "secondary-container": "#44474e",
+                        "on-secondary-fixed-variant": "#595b64",
+                        "on-primary-fixed-variant": "#006826"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "1.25rem",
+                        "lg": "1.5rem",
+                        "xl": "2.5rem",
+                        "full": "9999px"
+                    },
+                    "fontFamily": {
+                        "headline": ["Manrope", "sans-serif"],
+                        "body": ["Inter", "sans-serif"],
+                        "label": ["Manrope", "sans-serif"]
+                    }
+                },
+            },
+        }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        body {
+            background-color: #070e1d;
+            font-family: 'Inter', sans-serif;
+            -webkit-font-smoothing: antialiased;
+        }
+        .glass-card {
+            background: rgba(22, 31, 51, 0.4);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(110, 117, 136, 0.2);
+        }
+        .text-glow {
+            text-shadow: 0 0 15px rgba(111, 251, 133, 0.3);
+        }
+    </style>
+</head>
+<body class="bg-background text-on-surface min-h-screen pb-40">
+<!-- Top Navigation Bar -->
+<header class="fixed top-0 w-full z-50 bg-background/80 backdrop-blur-xl flex justify-between items-center px-6 py-5 border-b border-outline-variant/10">
+<div class="flex items-center gap-3">
+<div class="w-10 h-10 rounded-full overflow-hidden ring-2 ring-primary/20">
+<img alt="User Profile" class="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuB-ZACTlE0o0bWxMsb1CrNlJ2KE_SFvEVZikb-uFSpq2WXuvTUgBkME3zQIxh9wXK-U1j5kSq6wHcartO33DZOMum0I6XrgxhRWPATTnAN85yxibx1VzsgQt-0aqUznJd003I3mBLaLkkWADrqROc1riHtYS84RP892uKLa9PCcCq9YrCXkHijUTT-MsS5XTaPqKgvuntaTncIq1y_2UZNpdW9S0C0B9tJXnc4w4mOLRMBdScKLgW9-ZlqP4Xgeos2Zit1KiAPIIw"/>
+</div>
+</div>
+<h1 class="text-xl font-black italic text-primary font-headline tracking-tighter">MYGYMERA</h1>
+<div class="flex items-center gap-4">
+<div class="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-surface-container-high border border-outline-variant/20 shadow-sm">
+<span class="material-symbols-outlined text-tertiary-fixed text-lg" style="font-variation-settings: 'FILL' 1;">local_fire_department</span>
+<span class="font-headline font-bold text-xs text-tertiary-fixed">24 Day Streak</span>
+</div>
+<button class="text-on-surface-variant/80 hover:text-on-surface transition-colors">
+<span class="material-symbols-outlined text-2xl">notifications</span>
+</button>
+</div>
+</header>
+<main class="mt-28 px-6 max-w-2xl mx-auto">
+<!-- Header Section -->
+<section class="mb-10">
+<h2 class="text-6xl font-headline font-extrabold tracking-tight text-on-surface">Today</h2>
+<p class="text-on-surface-variant text-base mt-2 font-medium">You're showing up. Keep it going.</p>
+</section>
+<!-- Main Workout Card -->
+<section class="mb-8 relative overflow-hidden rounded-[2.5rem] glass-card p-1">
+<div class="absolute inset-0 bg-gradient-to-br from-primary/10 via-transparent to-transparent"></div>
+<div class="bg-surface-container-high/40 rounded-[2.25rem] p-8 relative z-10">
+<div class="flex justify-between items-start mb-12">
+<div>
+<span class="text-primary text-[10px] font-extrabold tracking-[0.3em] uppercase font-label">Session 01</span>
+<h3 class="text-4xl font-headline font-extrabold text-on-surface mt-2 leading-tight">Today's<br/>Workout</h3>
+</div>
+<div class="relative w-16 h-16 rounded-2xl bg-surface-container-highest/80 flex items-center justify-center border border-outline-variant/20 shadow-inner">
+<span class="material-symbols-outlined text-primary text-3xl">fitness_center</span>
+<button class="absolute -bottom-2 -right-2 w-7 h-7 rounded-full bg-surface-container-high border border-outline-variant/40 flex items-center justify-center shadow-lg hover:scale-110 active:scale-95 transition-all group" title="Program Recharge">
+<span class="material-symbols-outlined text-primary text-[16px] group-hover:rotate-180 transition-transform duration-500">autorenew</span>
+</button></div>
+</div>
+<div class="flex items-center gap-8 mb-10">
+<div class="flex flex-col">
+<span class="text-on-surface-variant text-[11px] uppercase tracking-widest font-bold mb-1">Activity</span>
+<span class="text-xl font-headline font-bold">Weight Training</span>
+</div>
+<div class="w-px h-10 bg-outline-variant/30"></div>
+<div class="flex flex-col">
+<span class="text-on-surface-variant text-[11px] uppercase tracking-widest font-bold mb-1">Duration</span>
+<span class="text-xl font-headline font-bold">45 min</span>
+</div>
+</div>
+<button class="w-full py-5 rounded-3xl bg-gradient-to-br from-primary via-primary-container to-primary-container/80 text-on-primary-container font-headline font-extrabold text-lg flex items-center justify-center gap-2 shadow-[0_20px_40px_-10px_rgba(111,251,133,0.3)] active:scale-[0.98] transition-all">
+<span class="material-symbols-outlined fill-1" style="font-variation-settings: 'FILL' 1;">play_arrow</span>
+<span>Start Workout</span>
+</button>
+</div>
+</section>
+<!-- Bento Stats Grid -->
+<section class="grid grid-cols-2 gap-4">
+<div class="glass-card p-6 rounded-[2rem]">
+<div class="w-10 h-10 rounded-full bg-tertiary/10 flex items-center justify-center mb-6">
+<span class="material-symbols-outlined text-tertiary-fixed text-xl" style="font-variation-settings: 'FILL' 1;">workspace_premium</span>
+</div>
+<span class="text-on-surface-variant text-xs font-bold uppercase tracking-wider">Streak</span>
+<div class="flex items-baseline gap-2 mt-1">
+<span class="text-4xl font-headline font-extrabold">24</span>
+<span class="text-on-surface-variant text-[10px] font-black uppercase tracking-tighter">Days</span>
+</div>
+<div class="mt-4 h-1.5 w-full bg-surface-container-highest/50 rounded-full overflow-hidden">
+<div class="h-full w-3/4 bg-tertiary-fixed rounded-full shadow-[0_0_10px_rgba(255,215,9,0.4)]"></div>
+</div>
+</div>
+<div class="glass-card p-6 rounded-[2rem]">
+<div class="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center mb-6">
+<span class="material-symbols-outlined text-primary text-xl" style="font-variation-settings: 'FILL' 1;">military_tech</span>
+</div>
+<span class="text-on-surface-variant text-xs font-bold uppercase tracking-wider">Progress</span>
+<div class="flex items-baseline gap-2 mt-1">
+<span class="text-4xl font-headline font-extrabold">85%</span>
+</div>
+<p class="text-[9px] text-on-surface-variant/80 uppercase tracking-[0.2em] mt-3 font-extrabold">Legend Elite</p>
+</div>
+</section>
+<!-- Achievement Preview Card (Editorial Style) -->
+<section class="mt-10 bg-surface-container-highest/30 border border-outline-variant/10 rounded-[2rem] overflow-hidden flex flex-col md:flex-row items-stretch min-h-[140px] relative">
+<div class="p-8 flex-1 flex flex-col justify-center relative z-10 bg-gradient-to-r from-surface-container-high to-transparent">
+<span class="text-primary text-[10px] font-black uppercase tracking-[0.25em] mb-2 block">New Challenge</span>
+<h4 class="text-on-surface font-headline font-extrabold text-xl leading-tight">Weekend Warriors</h4>
+<p class="text-on-surface-variant text-sm mt-2 font-medium">3 days to unlock the Gold Crown badge.</p>
+<button class="mt-5 text-primary font-extrabold text-sm flex items-center gap-2 group w-fit">
+                    View Details
+                    <span class="material-symbols-outlined text-base group-hover:translate-x-1 transition-transform">arrow_forward</span>
+</button>
+</div>
+<div class="w-full md:w-48 h-32 md:h-auto relative overflow-hidden">
+<img alt="Challenge" class="w-full h-full object-cover scale-110 group-hover:scale-100 transition-transform duration-700" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAwz2C-8o7PAAG-BMrNcd5mFW57hCvRxC3jP4wZIHjjmlBjD601TL-IecRpQaFy5TDUYaunkOhwilBrIa6Zckcc1Ke4u4vzdvRKo4oLL5XeoxsH3Vu4FmQ812wJfZIgCxW668h58Mct5CvllD6sHLSyraGj8HzrFUuefuGQPCkkKysgfpQBHm7BiP1cgpmV90HFTspe_qNZaYd7dbdLDIuzId28dZ4IU_WP_GeUwc7dNm1I4SNbTmh1TMEXWQ-SJOgrJfPwfBFpSQ"/>
+<div class="absolute inset-0 bg-gradient-to-r from-surface-container-high/80 via-surface-container-high/20 to-transparent"></div>
+</div>
+</section>
+</main>
+<!-- Bottom Navigation Bar -->
+<nav class="fixed bottom-0 left-0 w-full flex justify-around items-center px-6 py-6 bg-slate-950/80 backdrop-blur-2xl z-50 rounded-t-[3rem] border-t border-outline-variant/10 shadow-[0_-15px_40px_rgba(0,0,0,0.5)]">
+<a class="flex flex-col items-center justify-center text-primary group" href="#">
+<div class="bg-primary/10 p-3 rounded-2xl mb-1 group-active:scale-90 transition-transform">
+<span class="material-symbols-outlined text-2xl" style="font-variation-settings: 'FILL' 1;">home</span>
+</div>
+<span class="font-headline text-[10px] font-extrabold uppercase tracking-widest">Home</span>
+</a>
+<a class="flex flex-col items-center justify-center text-on-surface-variant hover:text-on-surface transition-colors" href="#">
+<div class="p-3 mb-1">
+<span class="material-symbols-outlined text-2xl">insights</span>
+</div>
+<span class="font-headline text-[10px] font-extrabold uppercase tracking-widest opacity-60">Diary</span>
+</a>
+<!-- Prominent Raised FAB -->
+<div class="relative -top-8 px-2">
+<button class="w-16 h-16 rounded-[1.5rem] bg-primary flex items-center justify-center shadow-[0_15px_30px_rgba(111,251,133,0.3)] ring-8 ring-background active:scale-90 transition-all group">
+<span class="material-symbols-outlined text-on-primary text-4xl font-bold group-hover:rotate-90 transition-transform duration-300">add</span>
+</button>
+</div>
+<a class="flex flex-col items-center justify-center text-on-surface-variant hover:text-on-surface transition-colors" href="#">
+<div class="p-3 mb-1">
+<span class="material-symbols-outlined text-2xl">history</span>
+</div>
+<span class="font-headline text-[10px] font-extrabold uppercase tracking-widest opacity-60">Plan</span>
+</a>
+<a class="flex flex-col items-center justify-center text-on-surface-variant hover:text-on-surface transition-colors" href="#">
+<div class="p-3 mb-1">
+<span class="material-symbols-outlined text-2xl">person</span>
+</div>
+<span class="font-headline text-[10px] font-extrabold uppercase tracking-widest opacity-60">More</span>
+</a>
+</nav>
+</body></html>

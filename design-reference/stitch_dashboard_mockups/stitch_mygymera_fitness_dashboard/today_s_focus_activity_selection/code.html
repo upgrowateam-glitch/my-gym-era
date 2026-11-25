@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>MyGymEra - Daily Activity Selection</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;700;800&amp;family=Inter:wght@400;500;600&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                "surface-container-lowest": "#000000",
+                "background": "#070e1d",
+                "primary-container": "#1db94d",
+                "on-background": "#dfe5fa",
+                "surface-dim": "#070e1d",
+                "on-primary-container": "#002a0a",
+                "surface-tint": "#6ffb85",
+                "tertiary-container": "#ffd709",
+                "on-tertiary-container": "#5b4b00",
+                "surface-container": "#11192b",
+                "outline-variant": "#414859",
+                "primary-fixed-dim": "#60ec79",
+                "on-surface": "#dfe5fa",
+                "surface-container-highest": "#1b263b",
+                "surface": "#070e1d",
+                "tertiary-fixed": "#ffd709",
+                "surface-container-high": "#161f33",
+                "primary-fixed": "#6ffb85",
+                "surface-variant": "#1b263b",
+                "on-surface-variant": "#a4abbf",
+                "surface-container-low": "#0b1323",
+                "primary": "#6ffb85",
+                "tertiary": "#ffe792",
+                "surface-bright": "#212c43"
+            },
+            "borderRadius": {
+                "DEFAULT": "1rem",
+                "lg": "2rem",
+                "xl": "3rem",
+                "full": "9999px"
+            },
+            "fontFamily": {
+                "headline": ["Manrope"],
+                "body": ["Inter"],
+                "label": ["Inter"]
+            }
+          },
+        },
+      }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        body {
+            background-color: #070e1d;
+            font-family: 'Inter', sans-serif;
+        }
+        .glass-nav {
+            background: rgba(22, 31, 51, 0.6);
+            backdrop-filter: blur(20px);
+        }
+        .activity-card-img {
+            transition: transform 0.6s cubic-bezier(0.33, 1, 0.68, 1);
+        }
+        .group:hover .activity-card-img {
+            transform: scale(1.05);
+        }
+    </style>
+<style>
+        body {
+            min-height: max(884px, 100dvh);
+        }
+    </style>
+</head>
+<body class="text-on-surface selection:bg-primary selection:text-on-primary-container min-h-screen pb-32">
+<!-- Top App Bar -->
+<header class="w-full pt-4 px-6 flex justify-between items-center bg-transparent">
+<div class="flex items-center gap-4">
+<button class="text-[#6ffb85] hover:opacity-80 transition-opacity active:scale-95">
+<span class="material-symbols-outlined" data-icon="arrow_back">arrow_back</span>
+</button>
+<h1 class="font-['Manrope'] font-bold text-lg tracking-tight text-[#6ffb85]">Today's Focus</h1>
+</div>
+<div class="flex items-center gap-2 px-3 py-1 bg-surface-container-high rounded-full">
+<span class="material-symbols-outlined text-tertiary text-sm" data-icon="military_tech" style="font-variation-settings: 'FILL' 1;">military_tech</span>
+<span class="font-['Manrope'] font-black text-[#6ffb85] text-sm">5 Day Streak</span>
+</div>
+</header>
+<main class="px-6 pt-8 max-w-2xl mx-auto">
+<!-- Title Section -->
+<div class="mb-10">
+<h2 class="font-headline font-extrabold text-4xl md:text-5xl tracking-tight leading-tight mb-2">
+            What's the <span class="text-primary">plan</span> today?
+        </h2>
+<p class="text-on-surface-variant font-body text-lg">Select your primary activity to track.</p>
+</div>
+<!-- Activity Selection Grid -->
+<div class="space-y-4">
+<!-- Card 1: Weight Training -->
+<button class="w-full text-left group transition-all duration-300 active:scale-[0.98] relative overflow-hidden rounded-lg">
+<div class="bg-surface-container-high h-40 flex items-center justify-between hover:bg-surface-bright transition-colors relative overflow-hidden">
+<!-- Image Overlay Container -->
+<div class="absolute inset-0 z-0">
+<img alt="Weight Training" class="activity-card-img w-full h-full object-cover opacity-50 grayscale hover:grayscale-0 transition-all duration-500" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDXKkJJfyCheWbWCIaMnaQXe731W_n3VLMKP89i6V4E4zSsshFWhXc0z27cQmtJKs0B9OZ16YqELbn8gxlm54Ip3TvgopMXJ2hI98pT92Du9aNbHQ38GKZh9elf8hhbPfH0QqKr0G6wIOG-vxVAcxMujD4X2gOjhpYwY9dX54iX7Q4ijmeaslL5o3PaGHkMS0dMgRDpRYdt7VvPkgnLo3BKC31Z8I2ZZpDON4gbtiJsVDawSchhjRLLFCvPiyybw21gNX99r4KR4w"/>
+<div class="absolute inset-0 bg-gradient-to-r from-surface-container-high via-surface-container-high/60 to-transparent"></div>
+</div>
+<div class="relative z-10 flex items-center gap-6 px-6 h-full w-full">
+<div>
+<h3 class="font-headline font-bold text-2xl text-on-surface">Weight Training</h3>
+<p class="text-on-surface-variant text-sm font-medium uppercase tracking-wider">Hypertrophy &amp; Strength</p>
+</div>
+</div>
+<div class="absolute right-6 z-10">
+<span class="material-symbols-outlined text-primary opacity-0 group-hover:opacity-100 transition-opacity text-3xl" data-icon="chevron_right">chevron_right</span>
+</div>
+</div>
+</button>
+<!-- Card 2: Cardio -->
+<button class="w-full text-left group transition-all duration-300 active:scale-[0.98] relative overflow-hidden rounded-lg">
+<div class="bg-surface-container-high h-40 flex items-center justify-between hover:bg-surface-bright transition-colors relative overflow-hidden">
+<!-- Image Overlay Container -->
+<div class="absolute inset-0 z-0">
+<img alt="Cardio" class="activity-card-img w-full h-full object-cover opacity-50 grayscale hover:grayscale-0 transition-all duration-500" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDH__xm4s4pkC0iqVf1uRQE0kOpH76vHtfo4FXJSLGlis3niu6gsOiEndyfOGSZPNxCEpJUNe7e8Z2vPe2u7LYfRu9CcXPXXgmv_9Hvhn4vmwm0qw8g7d721nmYbDSbuiJ3dnEQ3yx2n1-6wYAdqWYRrc5N-vSlWPQtD5oHOKgH3HsMY95vJrHyD93GR4GAW5-fRFmQuGG7-ELvePFtJ_3nEttTnXomH7VP13VcSv3nsVf_HSMy3l_0HZwq8s0DHFh6HWPNCJ-tYg"/>
+<div class="absolute inset-0 bg-gradient-to-r from-surface-container-high via-surface-container-high/60 to-transparent"></div>
+</div>
+<div class="relative z-10 flex items-center gap-6 px-6 h-full w-full">
+<div>
+<h3 class="font-headline font-bold text-2xl text-on-surface">Cardio</h3>
+<p class="text-on-surface-variant text-sm font-medium uppercase tracking-wider">Endurance &amp; Metcon</p>
+</div>
+</div>
+<div class="absolute right-6 z-10">
+<span class="material-symbols-outlined text-primary opacity-0 group-hover:opacity-100 transition-opacity text-3xl" data-icon="chevron_right">chevron_right</span>
+</div>
+</div>
+</button>
+<!-- Card 3: Bodyweight -->
+<button class="w-full text-left group transition-all duration-300 active:scale-[0.98] relative overflow-hidden rounded-lg">
+<div class="bg-surface-container-high h-40 flex items-center justify-between hover:bg-surface-bright transition-colors relative overflow-hidden">
+<!-- Image Overlay Container -->
+<div class="absolute inset-0 z-0">
+<img alt="Bodyweight" class="activity-card-img w-full h-full object-cover opacity-50 grayscale hover:grayscale-0 transition-all duration-500" src="https://lh3.googleusercontent.com/aida-public/AB6AXuA-4kbQF_glPvXlKux5Ydq42FVjdEH3F0RmX3rdo63kpH2z433oaz6lorwcb7y981mda4m5CUtERKscrsesLu6ga-LBqbpXspFQoxPa_-76jaCCBCzgsa1znNh5tN0H5Op637u6A7QNdvxMevGy1m3afrEIpGdccRNi1UyCohWE71K8V7Xj9UC-czL0jydbI58Wi-MiZrIM_Y4FM1s3Kzq9Z3iy6-Tsm_FTsjOhlyWu2osg3CJaWX1v6ZLUWEmmNzdimtWJqMQQZQ"/>
+<div class="absolute inset-0 bg-gradient-to-r from-surface-container-high via-surface-container-high/60 to-transparent"></div>
+</div>
+<div class="relative z-10 flex items-center gap-6 px-6 h-full w-full">
+<div>
+<h3 class="font-headline font-bold text-2xl text-on-surface">Bodyweight</h3>
+<p class="text-on-surface-variant text-sm font-medium uppercase tracking-wider">Calisthenics &amp; Mobility</p>
+</div>
+</div>
+<div class="absolute right-6 z-10">
+<span class="material-symbols-outlined text-primary opacity-0 group-hover:opacity-100 transition-opacity text-3xl" data-icon="chevron_right">chevron_right</span>
+</div>
+</div>
+</button>
+<!-- Card 4: Rest Day (Muted) -->
+<button class="w-full text-left group transition-all duration-300 active:scale-[0.98] mt-8">
+<div class="bg-surface-container-low border border-outline-variant/10 rounded-lg p-6 flex items-center justify-between opacity-60 hover:opacity-100 transition-all">
+<div class="flex items-center gap-6">
+<div class="w-14 h-14 rounded-xl bg-surface-container flex items-center justify-center text-on-surface-variant">
+<span class="material-symbols-outlined text-3xl" data-icon="nightlight">nightlight</span>
+</div>
+<div>
+<h3 class="font-headline font-bold text-xl text-on-surface">Rest Day</h3>
+<p class="text-on-surface-variant text-sm">Recovery &amp; Mindfulness</p>
+</div>
+</div>
+<div class="px-3 py-1 bg-surface-container-high rounded-md">
+<span class="text-[10px] font-bold uppercase tracking-widest text-on-surface-variant">Active Recovery</span>
+</div>
+</div>
+</button>
+</div>
+<!-- Lock It In Button (Disabled State) -->
+<div class="mt-12 mb-20">
+<button class="w-full py-5 rounded-full bg-surface-container-highest text-outline-variant font-headline font-extrabold text-lg uppercase tracking-widest cursor-not-allowed transition-all" disabled="">
+            Lock It In
+        </button>
+<p class="text-center mt-4 text-on-surface-variant text-xs font-label uppercase tracking-widest">Select an activity to continue</p>
+</div>
+</main>
+<!-- Bottom Navigation Shell -->
+<nav class="fixed bottom-0 left-0 w-full z-50 flex justify-around items-center px-8 py-4 bg-[#161f33]/60 backdrop-blur-xl shadow-[0_-24px_48px_rgba(0,0,0,0.4)] rounded-t-[2rem] pb-safe">
+<!-- Home -->
+<a class="flex flex-col items-center justify-center bg-gradient-to-tr from-[#6ffb85] to-[#1db94d] text-[#0b1323] rounded-full p-3 transition-colors" href="#">
+<span class="material-symbols-outlined" data-icon="home_storage" style="font-variation-settings: 'FILL' 1;">home_storage</span>
+</a>
+<!-- Workouts -->
+<a class="flex flex-col items-center justify-center text-[#a4abbf] p-3 hover:text-[#6ffb85] transition-colors" href="#">
+<span class="material-symbols-outlined" data-icon="fitness_center">fitness_center</span>
+</a>
+<!-- Awards -->
+<a class="flex flex-col items-center justify-center text-[#a4abbf] p-3 hover:text-[#6ffb85] transition-colors" href="#">
+<span class="material-symbols-outlined" data-icon="military_tech">military_tech</span>
+</a>
+<!-- Profile -->
+<a class="flex flex-col items-center justify-center text-[#a4abbf] p-3 hover:text-[#6ffb85] transition-colors" href="#">
+<span class="material-symbols-outlined" data-icon="person">person</span>
+</a>
+</nav>
+<!-- Decorative Element -->
+<div class="fixed top-0 right-0 -z-10 w-full h-full overflow-hidden pointer-events-none">
+<div class="absolute top-[-10%] right-[-10%] w-[50%] h-[50%] rounded-full bg-primary/5 blur-[120px]"></div>
+<div class="absolute bottom-[-10%] left-[-10%] w-[40%] h-[40%] rounded-full bg-tertiary/5 blur-[120px]"></div>
+</div>
+</body></html>
