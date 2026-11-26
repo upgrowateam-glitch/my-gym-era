@@ -8,7 +8,7 @@
 # Separate from every other project on the server:
 #   - fitzone-api and fitzone-db live only on FitZone's private network
 #     ("fitzone"); the database and server are NOT reachable from outside
-#   - only fitzone-web is linked to Traefik, which gives it HTTPS
+#   - only fitzone-web is announced to Traefik (via labels), which gives it HTTPS
 #   - no ports are opened on the VPS
 #
 # Settings and secrets come from the .env file next to this file (see .env.example).
@@ -73,10 +73,11 @@ services:
       - api
     networks:
       - fitzone
-      - traefik
     labels:
+      # Traefik runs on the server's own network, so it reaches this container
+      # directly on FitZone's network; nothing else is shared.
       - traefik.enable=true
-      - traefik.docker.network=${TRAEFIK_NETWORK:?Set TRAEFIK_NETWORK in the .env file}
+      - traefik.docker.network=fitzone
       - traefik.http.routers.fitzone.rule=Host(`${DOMAIN}`)
       - traefik.http.routers.fitzone.entrypoints=websecure
       - traefik.http.routers.fitzone.tls.certresolver=letsencrypt
@@ -85,10 +86,6 @@ services:
 networks:
   fitzone:
     name: fitzone
-  # Traefik's existing network (only fitzone-web joins it).
-  traefik:
-    name: ${TRAEFIK_NETWORK}
-    external: true
 
 volumes:
   fitzone-db-data:
