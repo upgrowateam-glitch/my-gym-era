@@ -28,12 +28,30 @@
       "backgroundColor": "#050607",
       "shortName": "FitZone"
     },
+    "runtimeVersion": {
+      "policy": "appVersion"
+    },
+    "updates": {
+      "url": "https://u.expo.dev/8cef96ca-4050-4fa1-adac-83a30e938369",
+      "checkAutomatically": "ON_LOAD"
+    },
     "plugins": [
       "expo-router",
       "expo-secure-store",
       "expo-status-bar",
       "expo-image",
-      "expo-font"
-    ]
+      "expo-font",
+      "expo-updates"
+    ],
+    "extra": {
+      "router": {
+        "asyncRoutes": {
+          "web": true
+        }
+      },
+      "eas": {
+        "projectId": "8cef96ca-4050-4fa1-adac-83a30e938369"
+      }
+    }
   }
 }
