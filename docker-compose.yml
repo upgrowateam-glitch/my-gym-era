@@ -1,12 +1,17 @@
-# FitZone on the VPS: the API server and its own PostgreSQL database.
+# FitZone on the VPS: website, API server and its own PostgreSQL database.
 #
-# Completely separate from every other project on the server:
-#   - its own private network ("fitzone"); not connected to Traefik or other apps
-#   - its own database container; the database is NOT reachable from outside
-#   - only the API (port API_PORT, default 4200) and the website
-#     (port WEB_PORT, default 4300) are opened
+#   https://<DOMAIN>  ->  Traefik (shared front door, HTTPS)  ->  fitzone-web
+#                                                                   │ /api, /socket.io, /uploads
+#                                                                   ▼
+#                                                     fitzone-api ──► fitzone-db
 #
-# Secrets come from the .env file next to this file (copy .env.example).
+# Separate from every other project on the server:
+#   - fitzone-api and fitzone-db live only on FitZone's private network
+#     ("fitzone"); the database and server are NOT reachable from outside
+#   - only fitzone-web is linked to Traefik, which gives it HTTPS
+#   - no ports are opened on the VPS
+#
+# Settings and secrets come from the .env file next to this file (see .env.example).
 #
 #   docker compose up -d --build     start / update
 #   docker compose logs -f api       watch the server log
@@ -51,9 +56,7 @@ services:
       JWT_SECRET: ${JWT_SECRET:?Set JWT_SECRET in the .env file}
       JWT_EXPIRES_IN: 7d
       UPLOAD_DIR: uploads
-      PUBLIC_BASE_URL: ${PUBLIC_BASE_URL:-}
-    ports:
-      - "${API_PORT:-4200}:4000"
+      PUBLIC_BASE_URL: https://${DOMAIN:?Set DOMAIN in the .env file}
     volumes:
       - fitzone-uploads:/app/uploads
     networks:
@@ -63,19 +66,29 @@ services:
     build:
       context: ./mobile
       args:
-        EXPO_PUBLIC_API_URL: ${PUBLIC_BASE_URL:?Set PUBLIC_BASE_URL in the .env file}
+        EXPO_PUBLIC_API_URL: https://${DOMAIN}
     container_name: fitzone-web
     restart: unless-stopped
     depends_on:
       - api
-    ports:
-      - "${WEB_PORT:-4300}:80"
     networks:
       - fitzone
+      - traefik
+    labels:
+      - traefik.enable=true
+      - traefik.docker.network=${TRAEFIK_NETWORK:?Set TRAEFIK_NETWORK in the .env file}
+      - traefik.http.routers.fitzone.rule=Host(`${DOMAIN}`)
+      - traefik.http.routers.fitzone.entrypoints=websecure
+      - traefik.http.routers.fitzone.tls.certresolver=letsencrypt
+      - traefik.http.services.fitzone.loadbalancer.server.port=80
 
 networks:
   fitzone:
     name: fitzone
+  # Traefik's existing network (only fitzone-web joins it).
+  traefik:
+    name: ${TRAEFIK_NETWORK}
+    external: true
 
 volumes:
   fitzone-db-data:
