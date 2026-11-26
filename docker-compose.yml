@@ -3,7 +3,8 @@
 # Completely separate from every other project on the server:
 #   - its own private network ("fitzone"); not connected to Traefik or other apps
 #   - its own database container; the database is NOT reachable from outside
-#   - only the API is opened, on port API_PORT (default 4200)
+#   - only the API (port API_PORT, default 4200) and the website
+#     (port WEB_PORT, default 4300) are opened
 #
 # Secrets come from the .env file next to this file (copy .env.example).
 #
@@ -55,6 +56,20 @@ services:
       - "${API_PORT:-4200}:4000"
     volumes:
       - fitzone-uploads:/app/uploads
+    networks:
+      - fitzone
+
+  web:
+    build:
+      context: ./mobile
+      args:
+        EXPO_PUBLIC_API_URL: ${PUBLIC_BASE_URL:?Set PUBLIC_BASE_URL in the .env file}
+    container_name: fitzone-web
+    restart: unless-stopped
+    depends_on:
+      - api
+    ports:
+      - "${WEB_PORT:-4300}:80"
     networks:
       - fitzone
 
