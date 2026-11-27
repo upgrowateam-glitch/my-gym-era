@@ -1,5 +1,5 @@
 // "Trainer" section on a user's card: shows the assigned trainer and lets the
-// Super Admin (any trainer) or an Admin (their own trainers) assign, change or
+// Super Admin or an Admin (any active trainer) assign, change or
 // remove it. The server enforces the same rules.
 
 import { Pressable, Text, View } from 'react-native';

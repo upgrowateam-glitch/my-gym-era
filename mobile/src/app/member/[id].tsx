@@ -2,6 +2,8 @@
 // Super Admin and Admins (with "View all users") can open any User; a Trainer
 // only the Users assigned to them. The server enforces this — anyone else gets
 // "not allowed". Real answers only; nothing is filled in for missing steps.
+// Super Admin / Admins also get the actions: assign or change the trainer and
+// activate / deactivate the account.
 
 import { useState, type ReactNode } from 'react';
 import { Pressable, RefreshControl, ScrollView, Text, View, type LayoutChangeEvent } from 'react-native';
@@ -9,15 +11,17 @@ import { Ionicons } from '@expo/vector-icons';
 import { router, useLocalSearchParams } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { homeRouteFor, useAuth } from '@/lib/auth';
-import { api } from '@/lib/api';
+import { api, ApiError } from '@/lib/api';
+import { assignTrainer, setAccountActive } from '@/lib/userActions';
 import { useApi } from '@/lib/useApi';
-import type { User } from '@/lib/types';
+import type { TrainerSummary, User } from '@/lib/types';
 import {
   ACTIVITY_LEVELS, BMI_INFO, DIET_TYPES, EATING_OUT, EXPERIENCE, GENDERS, GOALS, SLEEP_QUALITY, SMOKING, WORK_TYPES,
   WORKOUT_TIMES, getFitnessOf, labelOf, pastTrainingText, type FitnessProfile, type Section,
 } from '@/lib/fitness';
 import { RequireRole } from '@/components/RequireRole';
-import { Avatar, Badge, Notice } from '@/components/ui/UI';
+import { Avatar, Badge, Notice, ToggleRow } from '@/components/ui/UI';
+import { TrainerAssign } from '@/components/TrainerAssign';
 import { dashboardStyles, Grid, Loading, Mini, MiniRow, Muted, Panel, shortDate, TWO_COLUMNS_MIN, AMBER } from '@/components/staff/DashboardUI';
 import { SUPER as p } from '@/theme/palettes';
 
@@ -61,14 +65,19 @@ function MemberProfile() {
 
           {data.error && <Notice text={data.error} />}
           {!d && !data.error && <Loading />}
-          {d && <Profile account={d.account} f={d.fitness} twoCols={twoCols} />}
+          {d && (
+            <Profile account={d.account} f={d.fitness} twoCols={twoCols}
+              manage={me?.role === 'super_admin' || me?.role === 'admin'
+                ? <ManagePanel account={d.account} onChange={(u) => data.setData((cur) => (cur ? { ...cur, account: u } : cur))} />
+                : null} />
+          )}
         </View>
       </ScrollView>
     </SafeAreaView>
   );
 }
 
-function Profile({ account: u, f, twoCols }: { account: User; f: FitnessProfile; twoCols: boolean }) {
+function Profile({ account: u, f, twoCols, manage }: { account: User; f: FitnessProfile; twoCols: boolean; manage: ReactNode }) {
   const name = u.displayName || u.email;
   const notAnswered = (s: Section) => f.missing.includes(s);
 
@@ -94,6 +103,8 @@ function Profile({ account: u, f, twoCols }: { account: User; f: FitnessProfile;
           </View>
         </View>
       </View>
+
+      {manage}
 
       {!f.completedAt && (
         <Notice kind="info" text={f.missing.length === 7
@@ -202,6 +213,46 @@ function Profile({ account: u, f, twoCols }: { account: User; f: FitnessProfile;
       </Grid>
       {f.updatedAt && <Muted>Last updated {shortDate(f.updatedAt)}.</Muted>}
     </>
+  );
+}
+
+/** Staff actions: trainer and account status (same rules and popups as the Users list). */
+function ManagePanel({ account: u, onChange }: { account: User; onChange: (u: User) => void }) {
+  const trainers = useApi(() => api.get<{ trainers: TrainerSummary[] }>('/api/admin/trainers', { scope: 'all' }).then((r) => r.trainers));
+  const [open, setOpen] = useState(false);
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [info, setInfo] = useState<string | null>(null);
+
+  async function run(action: () => Promise<void>, fallback: string) {
+    setBusy(true);
+    setError(null);
+    setInfo(null);
+    try {
+      await action();
+    } catch (e) {
+      setError(e instanceof ApiError ? e.message : fallback);
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  return (
+    <Panel title="Manage" icon="settings-outline">
+      <TrainerAssign p={p} user={u} trainers={trainers.data} open={open} busy={busy} onToggle={() => setOpen(!open)}
+        onAssign={(id) => run(async () => {
+          const updated = await assignTrainer(u, id);
+          if (updated) { onChange(updated); setOpen(false); void trainers.reload(); }
+        }, 'Could not change the trainer.')} />
+      <ToggleRow p={p} title="Account active" detail={u.isArchived ? 'Deactivated: cannot sign in' : 'Can sign in'}
+        value={!u.isArchived} disabled={busy}
+        onChange={(v) => run(async () => {
+          const r = await setAccountActive(u, v);
+          if (r) { onChange(r.user); if (r.info) setInfo(r.info); }
+        }, 'Could not update the account.')} />
+      {(error || trainers.error) && <Notice text={(error ?? trainers.error)!} />}
+      {info && <Notice kind="info" text={info} />}
+    </Panel>
   );
 }
 

@@ -30,7 +30,7 @@ export const STAFF: Palette = {
 };
 
 /** Scrollable page with a header (kicker + title) and pull-to-refresh. */
-export function Page({ p, kicker, title, right, children, onRefresh, refreshing }: {
+export function Page({ p, kicker, title, right, children, onRefresh, refreshing, wide }: {
   p: Palette;
   kicker?: string;
   title: string;
@@ -38,11 +38,13 @@ export function Page({ p, kicker, title, right, children, onRefresh, refreshing 
   children: ReactNode;
   onRefresh?: () => void;
   refreshing?: boolean;
+  /** Use the full dashboard width (e.g. tables on a computer). */
+  wide?: boolean;
 }) {
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: p.bg }} edges={['top', 'left', 'right']}>
       <ScrollView
-        contentContainerStyle={styles.page}
+        contentContainerStyle={[styles.page, wide && { maxWidth: 1240 }]}
         keyboardShouldPersistTaps="handled"
         refreshControl={onRefresh ? <RefreshControl refreshing={!!refreshing} onRefresh={onRefresh} tintColor={p.accent} /> : undefined}
       >

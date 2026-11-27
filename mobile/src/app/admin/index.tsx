@@ -58,6 +58,7 @@ export default function AdminDashboard() {
   const unassigned = active.filter((u) => !u.trainerId);
   const newest = users ? [...users].sort((a, b) => b.createdAt.localeCompare(a.createdAt)).slice(0, 5) : [];
   const profilePct = active.length ? Math.round((active.filter((u) => u.profileCompleted).length / active.length) * 100) : 0;
+  const newThisMonth = users ? users.filter((u) => u.createdAt.slice(0, 7) === new Date().toISOString().slice(0, 7)).length : 0;
   const maxLoad = Math.max(1, ...(d?.trainers ?? []).map((t) => t.clientCount));
 
   return (
@@ -78,6 +79,8 @@ export default function AdminDashboard() {
               note={d ? `${fmt(d.stats.archivedClients)} deactivated` : undefined} />}
             <Kpi minWidth={150} icon="barbell-outline" label="My trainers" value={d?.stats.myTrainers} onPress={() => go('/admin/trainers')}
               note="Trainers you invited" />
+            {viewUsers && <Kpi minWidth={150} icon="sparkles-outline" label="New this month" value={users ? newThisMonth : undefined}
+              onPress={() => go('/admin/users')} note="New registrations" />}
             {viewUsers && <Kpi minWidth={150} icon="git-network-outline" label="No trainer" value={d?.stats.unassignedClients}
               onPress={() => go('/admin/users')} note={d?.stats.unassignedClients ? 'Need a trainer' : 'Everyone assigned'}
               noteColor={d?.stats.unassignedClients ? AMBER : undefined} />}
@@ -140,7 +143,7 @@ export default function AdminDashboard() {
                     <PersonRow key={u.uid} name={u.displayName || u.email} onPress={() => go(`/member/${u.uid}`)} detail={`Joined ${shortDate(u.createdAt)}`}
                       right={<Ionicons name="chevron-forward" size={18} color={p.textSecondary} />} />
                   ))}
-                  <Muted>Each user has one trainer at a time; you can reassign whenever needed. You can assign your own trainers.</Muted>
+                  <Muted>Each user has one trainer at a time; you can assign any active trainer and reassign whenever needed.</Muted>
                 </>
               )}
             </Panel>

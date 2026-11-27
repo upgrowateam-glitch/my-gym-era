@@ -282,8 +282,19 @@ async function run() {
   const assignByAdmin = await api('PUT', `/api/users/${user.id}/trainer`, { token: admin.token, body: { trainerId: tom.id } });
   check('Admin assigns a user to their own trainer',
     assignByAdmin.status === 200 && assignByAdmin.data.user.trainerId === tom.id && assignByAdmin.data.user.trainerName === 'Tom Trainer', assignByAdmin);
-  check('Admin cannot assign to another Admin\'s trainer → 400',
-    (await api('PUT', `/api/users/${user.id}/trainer`, { token: admin.token, body: { trainerId: otherTrainer.id } })).data?.code === 'invalid_trainer');
+  check('Admin can assign to any active trainer (also another Admin\'s)',
+    (await api('PUT', `/api/users/${user.id}/trainer`, { token: admin.token, body: { trainerId: otherTrainer.id } })).data?.user?.trainerId === otherTrainer.id);
+  const allTrainers = await api('GET', '/api/admin/trainers?scope=all', { token: admin.token });
+  check('Admin sees all trainers for assigning', allTrainers.data?.trainers?.some((t) => t.uid === otherTrainer.id), allTrainers.data);
+  check('…but without "view users" → 403', (await api('GET', '/api/admin/trainers?scope=all', { token: ba.token })).status === 403);
+  const offTrainer = await createTestUser(TAG, 'trainer', { managedBy: admin.id });
+  await query('UPDATE users SET is_archived = true WHERE id = $1', [offTrainer.id]);
+  check('deactivated trainer cannot be assigned → 400',
+    (await api('PUT', `/api/users/${user.id}/trainer`, { token: admin.token, body: { trainerId: offTrainer.id } })).data?.code === 'invalid_trainer');
+  const adminOff = await api('PATCH', `/api/users/${user.id}`, { token: admin.token, body: { isArchived: true } });
+  check('Admin deactivates a user', adminOff.data?.user?.isArchived === true, adminOff.data);
+  const adminOn = await api('PATCH', `/api/users/${user.id}`, { token: admin.token, body: { isArchived: false } });
+  check('Admin reactivates a user', adminOn.data?.user?.isArchived === false, adminOn.data);
   check('Admin without "view users" cannot assign → 403',
     (await api('PUT', `/api/users/${user.id}/trainer`, { token: ba.token, body: { trainerId: tom.id } })).status === 403);
   check('Trainer cannot assign users → 403',

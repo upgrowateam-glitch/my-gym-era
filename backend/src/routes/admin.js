@@ -15,8 +15,8 @@ import { requireAuth, requireRole } from '../middleware/auth.js';
 import { USER_COLUMNS, TRAINER_NAME_COLUMN, toPublicUser } from '../users/userModel.js';
 import { SELECT_INVITATION, toInvitation } from './invitations.js';
 import * as v from '../validate.js';
-import { badRequest } from '../errors.js';
-import { normaliseWhatsapp } from '../users/userModel.js';
+import { badRequest, forbidden } from '../errors.js';
+import { hasPermission, normaliseWhatsapp } from '../users/userModel.js';
 import { getSetting, setSetting } from '../settings.js';
 
 export const adminRouter = Router();
@@ -54,7 +54,13 @@ adminRouter.get('/trainers', async (req, res) => {
     ? false : v.oneOf(req.query.archived, 'archived', ['true', 'false']) === 'true';
   const params = [archived];
   let scope = '';
-  if (req.user.role === 'admin') {
+  // ?scope=all: every trainer in the gym (Admins need "View all users"), used
+  // when assigning users to trainers. Otherwise an Admin sees only their own.
+  const all = req.query.scope === 'all';
+  if (all && req.user.role === 'admin' && !hasPermission(req.user, 'view_users')) {
+    throw forbidden('Your account does not have access to this.', 'no_permission');
+  }
+  if (req.user.role === 'admin' && !all) {
     params.push(req.user.id);
     scope = 'AND managed_by = $2';
   }

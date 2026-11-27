@@ -6,6 +6,7 @@ import { useState } from 'react';
 import { View } from 'react-native';
 import { useLocalSearchParams } from 'expo-router';
 import { AccountList } from '@/components/AccountList';
+import { UsersManager } from '@/components/UsersManager';
 import { Chips, Page } from '@/components/ui/UI';
 import type { Role } from '@/lib/types';
 import { SUPER as p } from '@/theme/palettes';
@@ -32,14 +33,15 @@ export default function UserManagement() {
   }
 
   return (
-    <Page p={p} kicker="SUPER ADMIN" title="Users">
+    <Page p={p} kicker="SUPER ADMIN" title="Users" wide={tab === 'users'}>
       <Chips p={p} value={tab} onChange={setTab} options={[
         { value: 'admins', label: 'Admins' }, { value: 'trainers', label: 'Trainers' }, { value: 'users', label: 'Users' },
       ]} />
       <View>
         {/* key: remount the list (and reload) when the tab changes */}
-        <AccountList key={tab} p={p} roles={ROLES[tab]} canToggle canEditAccess={tab === 'admins'}
-          canAssignTrainer={tab === 'users'} emptyText={EMPTY[tab]} />
+        {tab === 'users'
+          ? <UsersManager p={p} canToggle />
+          : <AccountList key={tab} p={p} roles={ROLES[tab]} canToggle canEditAccess={tab === 'admins'} emptyText={EMPTY[tab]} />}
       </View>
     </Page>
   );

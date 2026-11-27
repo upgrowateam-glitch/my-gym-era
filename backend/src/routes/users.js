@@ -199,17 +199,16 @@ userRouter.delete('/', selfOrAdmin, async (req, res) => {
 });
 
 // Assign a user to a trainer (or unassign with trainerId: null).
-// Super Admin: any active trainer. Admin (needs "view users" to reach the
-// user at all): only the trainers they manage, the same ones they can see.
+// Super Admin and Admins (Admins need "view users" to reach the user at all):
+// any active trainer in the gym.
 userRouter.put('/trainer', requireRole('admin'), async (req, res) => {
   if (req.targetUser.role !== 'client') throw badRequest('Only users can be assigned to a trainer.', 'not_a_user');
   const trainerId = req.body?.trainerId === null ? null : v.string(req.body?.trainerId, 'trainerId', { max: 128, allowEmpty: false });
   if (trainerId) {
-    const { rows } = await query('SELECT role, is_archived, managed_by FROM users WHERE id = $1', [trainerId]);
+    const { rows } = await query('SELECT role, is_archived FROM users WHERE id = $1', [trainerId]);
     const trainer = rows[0];
-    const visible = trainer && (req.user.role === 'super_admin' || trainer.managed_by === req.user.id);
-    if (!visible || trainer.role !== 'trainer' || trainer.is_archived) {
-      throw badRequest('Choose one of your active trainers.', 'invalid_trainer');
+    if (!trainer || trainer.role !== 'trainer' || trainer.is_archived) {
+      throw badRequest('Choose an active trainer.', 'invalid_trainer');
     }
   }
   const { rows } = await query(

@@ -4,14 +4,13 @@
 // assigned trainer.
 
 import { useState } from 'react';
-import { Linking, Pressable, Text, View } from 'react-native';
+import { Pressable, Text, View } from 'react-native';
 import { router } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '@/lib/auth';
 import { api, ApiError } from '@/lib/api';
 import { useApi } from '@/lib/useApi';
-import { confirm } from '@/lib/confirm';
-import { appBaseUrl, whatsappUrl } from '@/lib/links';
+import { assignTrainer, setAccountActive } from '@/lib/userActions';
 import {
   ALL_PERMISSIONS, PERMISSION_LABELS, ROLE_LABELS, type Permission, type Role, type TrainerSummary, type User,
 } from '@/lib/types';
@@ -46,9 +45,9 @@ export function AccountList({ p, roles, canToggle, canEditAccess, canAssignTrain
     return all.flatMap((r) => r.users);
   });
 
-  // Trainers that may be assigned (Super Admin: all; Admin: their own). Active only.
+  // All active trainers in the gym (both Super Admin and Admins may assign any of them).
   const trainers = useApi(async () => (canAssignTrainer
-    ? (await api.get<{ trainers: TrainerSummary[] }>('/api/admin/trainers')).trainers
+    ? (await api.get<{ trainers: TrainerSummary[] }>('/api/admin/trainers', { scope: 'all' })).trainers
     : []));
 
   const q = search.trim().toLowerCase();
@@ -57,14 +56,14 @@ export function AccountList({ p, roles, canToggle, canEditAccess, canAssignTrain
     && (!q || u.displayName.toLowerCase().includes(q) || u.email.toLowerCase().includes(q) || (u.whatsapp ?? '').includes(q)));
   const unassignedCount = (list.data ?? []).filter((u) => !u.trainerId).length;
 
-  async function assignTrainer(u: User, trainerId: string | null) {
-    if (trainerId === null && !(await confirm(`Remove the trainer from ${u.displayName || u.email}?`,
-      'They will have no trainer until you assign one again.', 'Remove'))) return;
+  async function changeTrainer(u: User, trainerId: string | null) {
     setBusyId(u.uid);
     setError(null);
+    setInfo(null);
     try {
-      const res = await api.put<{ user: User }>(`/api/users/${u.uid}/trainer`, { trainerId });
-      list.setData((cur) => (cur ?? []).map((x) => (x.uid === u.uid ? res.user : x)));
+      const updated = await assignTrainer(u, trainerId);
+      if (!updated) return;
+      list.setData((cur) => (cur ?? []).map((x) => (x.uid === u.uid ? updated : x)));
       setAssignOpenId(null);
       void trainers.reload(); // refresh the "n users" counts
     } catch (e) {
@@ -75,23 +74,18 @@ export function AccountList({ p, roles, canToggle, canEditAccess, canAssignTrain
   }
 
   async function setActive(u: User, active: boolean) {
-    if (!active && !(await confirm(`Deactivate ${u.displayName || u.email}?`,
-      'They will be signed out and cannot log in until reactivated.', 'Deactivate'))) return;
-    const ok = await update(u, { isArchived: !active });
-    if (!ok || !active) return;
-    // Reactivated: offer to tell them on WhatsApp (opens WhatsApp with the message ready; you tap Send).
-    const name = u.displayName?.split(' ')[0] || 'there';
-    if (!u.whatsapp) {
-      setInfo(`${u.displayName || u.email} is active again. They have no WhatsApp number saved, so please let them know another way.`);
-      return;
-    }
-    if (await confirm(`${u.displayName || u.email} is active again`, `Tell ${name} on WhatsApp that they can sign in now?`, 'Open WhatsApp', { tone: 'whatsapp' })) {
-      const message = `Hi ${name}, good news! Your FitZone account is active again. You can sign in now: ${appBaseUrl()}/login`;
-      try {
-        await Linking.openURL(whatsappUrl(u.whatsapp, message));
-      } catch {
-        setError('Could not open WhatsApp. Please check that WhatsApp is installed.');
-      }
+    setBusyId(u.uid);
+    setError(null);
+    setInfo(null);
+    try {
+      const r = await setAccountActive(u, active);
+      if (!r) return;
+      list.setData((cur) => (cur ?? []).map((x) => (x.uid === u.uid ? r.user : x)));
+      if (r.info) setInfo(r.info);
+    } catch (e) {
+      setError(e instanceof ApiError ? e.message : 'Could not update the account.');
+    } finally {
+      setBusyId(null);
     }
   }
 
@@ -166,7 +160,7 @@ export function AccountList({ p, roles, canToggle, canEditAccess, canAssignTrain
               <TrainerAssign p={p} user={u} trainers={trainers.data} open={assignOpenId === u.uid}
                 busy={busyId === u.uid}
                 onToggle={() => setAssignOpenId(assignOpenId === u.uid ? null : u.uid)}
-                onAssign={(trainerId) => assignTrainer(u, trainerId)} />
+                onAssign={(trainerId) => changeTrainer(u, trainerId)} />
             )}
             {toggleAllowed && (
               <ToggleRow p={p} title="Account active" value={!u.isArchived} onChange={(v) => setActive(u, v)}
