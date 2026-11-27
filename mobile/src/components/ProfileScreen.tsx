@@ -1,7 +1,7 @@
 // "My profile" for every role: view / edit name and WhatsApp, change
 // password, log out. The email and role are shown but cannot be changed.
 
-import { useState } from 'react';
+import { useState, type ReactNode } from 'react';
 import { View, Text } from 'react-native';
 import { useAuth } from '@/lib/auth';
 import { api, ApiError } from '@/lib/api';
@@ -10,7 +10,7 @@ import { confirm } from '@/lib/confirm';
 import { Avatar, Badge, Button, Card, Field, Notice, Page, SectionTitle, type Palette } from './ui/UI';
 import { PhoneField } from './PhoneInput';
 
-export function ProfileScreen({ p, kicker }: { p: Palette; kicker: string }) {
+export function ProfileScreen({ p, kicker, extra }: { p: Palette; kicker: string; extra?: ReactNode }) {
   const { user, setUser, logout } = useAuth();
   const [name, setName] = useState(user?.displayName ?? '');
   const [whatsapp, setWhatsapp] = useState(user?.whatsapp ?? '');
@@ -69,6 +69,7 @@ export function ProfileScreen({ p, kicker }: { p: Palette; kicker: string }) {
           <Badge label={ROLE_LABELS[user.role]} tone="active" />
         </View>
       </Card>
+      {extra}
 
       <SectionTitle p={p}>Basic details</SectionTitle>
       <Card p={p}>

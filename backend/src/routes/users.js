@@ -67,7 +67,7 @@ usersRouter.get('/', requireRole('admin'), async (req, res) => {
   if (req.user.role === 'admin') {
     params.push(hasPermission(req.user, 'view_users'));
     params.push(req.user.id);
-    where.push(`((role = 'client' AND $${params.length - 1}) OR (role = 'trainer' AND managed_by = $${params.length}))`);
+    where.push(`((role = 'client' AND $${params.length - 1}) OR (role = 'trainer' AND (managed_by = $${params.length} OR $${params.length - 1})))`);
   }
 
   const { rows } = await query(
@@ -136,6 +136,10 @@ function checkAdminField(key, actor, target, isSelf) {
       if (key !== 'isArchived') throw forbidden();
       if (!hasPermission(actor, 'manage_trainers')) {
         throw forbidden('Your account does not have access to this.', 'no_permission');
+      }
+      // Admins may see every trainer, but only switch on/off the ones they invited.
+      if (target.managed_by !== actor.id) {
+        throw forbidden('You can only activate or deactivate the trainers you invited.', 'not_your_trainer');
       }
     } else if (target.role !== 'client') {
       throw forbidden();

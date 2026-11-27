@@ -1,18 +1,16 @@
-// Admin → the trainers this Admin manages (invited).
+// Admin → Trainers: every trainer (with "View all users"), their users,
+// moving users between trainers, and status for the trainers this Admin invited.
 
 import { can, useAuth } from '@/lib/auth';
-import { AccountList } from '@/components/AccountList';
-import { Notice, Page } from '@/components/ui/UI';
+import { TrainersManager } from '@/components/TrainersManager';
+import { Page } from '@/components/ui/UI';
 import { ADMIN as p } from '@/theme/palettes';
 
 export default function AdminTrainers() {
   const { user } = useAuth();
-  const mayToggle = can(user, 'manage_trainers');
   return (
-    <Page p={p} kicker="ADMIN" title="My Trainers">
-      {!mayToggle && <Notice kind="info" text="You can view your trainers. Activating / deactivating them needs access from the Super Admin." />}
-      <AccountList p={p} roles={['trainer']} canToggle={mayToggle}
-        emptyText="No trainers yet. Invite one from the Invitations tab." />
+    <Page p={p} kicker="ADMIN" title="Trainers" wide>
+      <TrainersManager p={p} inviteHref={can(user, 'invite_trainers') ? '/admin/invitations' : undefined} />
     </Page>
   );
 }

@@ -170,10 +170,12 @@ export function PersonRow({ name, detail, right, onPress }: {
 }
 
 /** Trainer with their number of users and a bar relative to the busiest trainer. */
-export function TrainerLoadRow({ name, detail, count, max }: { name: string; detail: string; count: number; max: number }) {
+export function TrainerLoadRow({ name, detail, count, max, onPress }: {
+  name: string; detail: string; count: number; max: number; onPress?: () => void;
+}) {
   return (
     <View style={{ gap: 6 }}>
-      <PersonRow name={name} detail={detail}
+      <PersonRow name={name} detail={detail} onPress={onPress}
         right={<Text style={styles.count}>{count} <Text style={styles.rowSub}>{count === 1 ? 'user' : 'users'}</Text></Text>} />
       <View style={styles.track}>
         <View style={[styles.fill, { width: `${(count / Math.max(1, max)) * 100}%` }]} />

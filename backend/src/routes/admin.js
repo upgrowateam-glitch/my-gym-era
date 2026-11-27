@@ -50,9 +50,9 @@ adminRouter.get('/stats', async (req, res) => {
 });
 
 adminRouter.get('/trainers', async (req, res) => {
-  const archived = req.query.archived === undefined
-    ? false : v.oneOf(req.query.archived, 'archived', ['true', 'false']) === 'true';
-  const params = [archived];
+  // archived: false (default) = active trainers, true = deactivated, any = both.
+  const archivedParam = req.query.archived === undefined ? 'false' : v.oneOf(req.query.archived, 'archived', ['true', 'false', 'any']);
+  const params = [archivedParam === 'any' ? null : archivedParam === 'true'];
   let scope = '';
   // ?scope=all: every trainer in the gym (Admins need "View all users"), used
   // when assigning users to trainers. Otherwise an Admin sees only their own.
@@ -69,11 +69,33 @@ adminRouter.get('/trainers', async (req, res) => {
             (SELECT m.display_name FROM users m WHERE m.id = users.managed_by) AS manager_name,
             (SELECT count(*)::int FROM users c
               WHERE c.trainer_id = users.id AND c.role = 'client' AND NOT c.is_archived) AS client_count
-     FROM users WHERE role = 'trainer' AND is_archived = $1 ${scope}
+     FROM users WHERE role = 'trainer' AND ($1::boolean IS NULL OR is_archived = $1) ${scope}
      ORDER BY display_name, email`, params);
   res.json({
     trainers: rows.map((r) => ({ ...toPublicUser(r), managerName: r.manager_name, clientCount: r.client_count })),
   });
+});
+
+// ── Move users between trainers ─────────────────────────────────────────────
+// POST /api/admin/trainers/:id/move-users  { toTrainerId }
+// Moves every user of trainer :id to another active trainer (or to nobody with
+// toTrainerId: null). Super Admin, or an Admin with "View all users".
+adminRouter.post('/trainers/:id/move-users', async (req, res) => {
+  if (req.user.role === 'admin' && !hasPermission(req.user, 'view_users')) {
+    throw forbidden('Your account does not have access to this.', 'no_permission');
+  }
+  const fromId = v.string(req.params.id, 'id', { max: 128, allowEmpty: false });
+  const toId = req.body?.toTrainerId === null ? null : v.string(req.body?.toTrainerId, 'toTrainerId', { max: 128, allowEmpty: false });
+  const { rows: from } = await query('SELECT role FROM users WHERE id = $1', [fromId]);
+  if (from[0]?.role !== 'trainer') throw badRequest('Trainer not found.', 'invalid_trainer');
+  if (toId !== null) {
+    if (toId === fromId) throw badRequest('Choose a different trainer.', 'same_trainer');
+    const { rows: to } = await query('SELECT role, is_archived FROM users WHERE id = $1', [toId]);
+    if (to[0]?.role !== 'trainer' || to[0].is_archived) throw badRequest('Choose an active trainer.', 'invalid_trainer');
+  }
+  const { rowCount } = await query(
+    "UPDATE users SET trainer_id = $1 WHERE trainer_id = $2 AND role = 'client'", [toId, fromId]);
+  res.json({ moved: rowCount });
 });
 
 // ── Super Admin dashboard ───────────────────────────────────────────────────

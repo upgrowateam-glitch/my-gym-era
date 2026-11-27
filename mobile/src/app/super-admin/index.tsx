@@ -122,7 +122,7 @@ export default function SuperAdminDashboard() {
                   )}
                   {d.trainers.length === 0 ? <Muted>No trainers yet. Invite one from Invitations.</Muted>
                     : d.trainers.map((t) => (
-                      <TrainerLoadRow key={t.uid} name={t.displayName || t.email} count={t.clientCount}
+                      <TrainerLoadRow key={t.uid} name={t.displayName || t.email} count={t.clientCount} onPress={() => go(`/coach/${t.uid}`)}
                         max={Math.max(...d.trainers.map((x) => x.clientCount))}
                         detail={t.managerName ? `Invited by ${t.managerName}` : t.email} />
                     ))}

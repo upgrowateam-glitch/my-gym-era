@@ -192,8 +192,16 @@ async function run() {
   check('reactivated trainer can log in again', (await login(mail('tom'), 'tom-pass-1')).status === 200);
 
   const otherTrainer = await createTestUser(TAG, 'trainer', { managedBy: noInviteAdmin.id });
-  check('Admin cannot see another Admin\'s trainer → 403',
-    (await api('GET', `/api/users/${otherTrainer.id}`, { token: admin.token })).status === 403);
+  check('Admin with "view users" can see another Admin\'s trainer',
+    (await api('GET', `/api/users/${otherTrainer.id}`, { token: admin.token })).status === 200);
+  check('Admin without "view users" cannot see another Admin\'s trainer → 403',
+    (await api('GET', `/api/users/${otherTrainer.id}`, { token: ba.token })).status === 403);
+  check('Admin cannot deactivate another Admin\'s trainer → 403',
+    (await api('PATCH', `/api/users/${otherTrainer.id}`, { token: admin.token, body: { isArchived: true } })).data?.code === 'not_your_trainer');
+  const listAll = await api('GET', '/api/users?role=trainer', { token: admin.token });
+  check('Admin trainer list (view users) includes other Admins\' trainers', listAll.data?.users?.some((u) => u.uid === otherTrainer.id));
+  const anyStatus = await api('GET', '/api/admin/trainers?scope=all&archived=any', { token: admin.token });
+  check('trainers list with archived=any works', anyStatus.status === 200 && anyStatus.data.trainers.some((t) => t.uid === otherTrainer.id), anyStatus.data);
   const trainers = await api('GET', '/api/admin/trainers', { token: admin.token });
   check('Admin\'s trainer list = only their trainers',
     trainers.data?.trainers?.length === 1 && trainers.data.trainers[0].uid === tom.id, trainers.data?.trainers?.map((t) => t.displayName));
@@ -309,6 +317,21 @@ async function run() {
   check('Super Admin can assign to any trainer', assignBySa.data?.user?.trainerId === otherTrainer.id, assignBySa);
   const unassignedList = await api('GET', '/api/users?role=client&unassigned=true', { token: sa.token });
   check('"unassigned" filter leaves out assigned users', !unassignedList.data?.users?.some((u) => u.uid === user.id));
+
+  // Move all users of one trainer to another (Phase 4).
+  const moveUrl = `/api/admin/trainers/${otherTrainer.id}/move-users`;
+  check('Admin without "view users" cannot move users → 403',
+    (await api('POST', moveUrl, { token: ba.token, body: { toTrainerId: tom.id } })).status === 403);
+  check('cannot move to the same trainer → 400',
+    (await api('POST', moveUrl, { token: admin.token, body: { toTrainerId: otherTrainer.id } })).data?.code === 'same_trainer');
+  check('cannot move to a deactivated trainer → 400',
+    (await api('POST', moveUrl, { token: admin.token, body: { toTrainerId: offTrainer.id } })).data?.code === 'invalid_trainer');
+  const moved = await api('POST', moveUrl, { token: admin.token, body: { toTrainerId: tom.id } });
+  const afterMove = await api('GET', `/api/users/${user.id}`, { token: sa.token });
+  check('Admin moves all of a trainer\'s users to another trainer',
+    moved.data?.moved >= 1 && afterMove.data?.user?.trainerId === tom.id, { moved: moved.data, after: afterMove.data?.user?.trainerId });
+  check('Trainer cannot move users → 403',
+    (await api('POST', `/api/admin/trainers/${tom.id}/move-users`, { token: tom2.token, body: { toTrainerId: otherTrainer.id } })).status === 403);
 
   await api('PUT', `/api/users/${user.id}/trainer`, { token: sa.token, body: { trainerId: tom.id } });
   check('trainer sees their assigned user', (await api('GET', `/api/users/${user.id}`, { token: tom2.token })).status === 200);

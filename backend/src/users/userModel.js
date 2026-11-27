@@ -75,7 +75,8 @@ export function canSeeAccount(staff, target) {
   if (staff.role === 'super_admin') return true;
   if (staff.role === 'admin') {
     if (target.role === 'client') return hasPermission(staff, 'view_users');
-    if (target.role === 'trainer') return target.managed_by === staff.id;
+    // Their own trainers, or every trainer with "View all users" (to see who coaches whom).
+    if (target.role === 'trainer') return target.managed_by === staff.id || hasPermission(staff, 'view_users');
     return false;
   }
   if (staff.role === 'trainer') return target.role === 'client' && target.trainer_id === staff.id;

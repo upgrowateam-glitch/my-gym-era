@@ -1,8 +1,10 @@
-// Yes/No question in FitZone style (dark card, gold), same on phones and web.
-// <ConfirmHost /> is mounted once in the root layout; confirm() opens it and
-// resolves true (OK) or false (Cancel / tapped outside).
+// Questions in FitZone style (dark card, gold), same on phones and web.
+// <ConfirmHost /> is mounted once in the root layout.
 //
-//   if (await confirm('Log out', 'Do you want to log out?', 'Log out')) ...
+//   confirm(): Yes / No            → true (OK) or false (Cancel / tapped outside)
+//     if (await confirm('Log out', 'Do you want to log out?', 'Log out')) ...
+//   ask(): OK / other choice / Cancel → 'ok' | 'alt' | 'cancel'
+//     await ask('Trainer has 3 users', '…', 'Move users first', { altLabel: 'Deactivate anyway' })
 
 import { useEffect, useState } from 'react';
 import { Modal, Pressable, StyleSheet, Text, View } from 'react-native';
@@ -11,16 +13,21 @@ import { fitzone as c, font } from '@/theme/colors';
 
 type IconName = keyof typeof Ionicons.glyphMap;
 type Tone = 'gold' | 'danger' | 'whatsapp';
+export type Answer = 'ok' | 'alt' | 'cancel';
 
 export interface ConfirmOptions {
   tone?: Tone;
   icon?: IconName;
   /** Only an OK button (for messages). */
   hideCancel?: boolean;
+  /** A second choice besides OK (ask() only), e.g. "Deactivate anyway". */
+  altLabel?: string;
+  altTone?: Tone;
 }
 
-interface Request extends Required<Omit<ConfirmOptions, 'icon'>> {
-  title: string; message: string; okLabel: string; icon: IconName; resolve: (ok: boolean) => void;
+interface Request {
+  title: string; message: string; okLabel: string; icon: IconName; tone: Tone; hideCancel: boolean;
+  altLabel: string | null; altTone: Tone; resolve: (a: Answer) => void;
 }
 
 const GOLD = '#C9A66B';
@@ -31,60 +38,79 @@ const TONES: Record<Tone, { color: string; on: string; icon: IconName }> = {
 };
 // Actions that remove or switch something off are shown in red.
 const DANGER_WORDS = ['deactivate', 'remove', 'revoke', 'log out', 'delete'];
+const toneFor = (label: string): Tone => (DANGER_WORDS.includes(label.toLowerCase()) ? 'danger' : 'gold');
 
 let show: ((r: Request) => void) | null = null;
 
-export function confirm(title: string, message: string, okLabel = 'OK', options: ConfirmOptions = {}): Promise<boolean> {
-  const tone = options.tone ?? (DANGER_WORDS.includes(okLabel.toLowerCase()) ? 'danger' : 'gold');
+export function ask(title: string, message: string, okLabel = 'OK', options: ConfirmOptions = {}): Promise<Answer> {
+  const tone = options.tone ?? toneFor(okLabel);
   return new Promise((resolve) => {
     const request: Request = {
       title, message, okLabel, tone, hideCancel: !!options.hideCancel,
+      altLabel: options.altLabel ?? null, altTone: options.altTone ?? toneFor(options.altLabel ?? ''),
       icon: options.icon ?? (okLabel.toLowerCase() === 'log out' ? 'log-out-outline' : TONES[tone].icon), resolve,
     };
     if (show) show(request);
-    else resolve(false); // host not mounted (should not happen)
+    else resolve('cancel'); // host not mounted (should not happen)
   });
+}
+
+export async function confirm(title: string, message: string, okLabel = 'OK', options: ConfirmOptions = {}): Promise<boolean> {
+  return (await ask(title, message, okLabel, { ...options, altLabel: undefined })) === 'ok';
 }
 
 export function ConfirmHost() {
   const [req, setReq] = useState<Request | null>(null);
   useEffect(() => {
-    show = (r) => setReq((cur) => { cur?.resolve(false); return r; });
+    show = (r) => setReq((cur) => { cur?.resolve('cancel'); return r; });
     return () => { show = null; };
   }, []);
 
-  const close = (ok: boolean) => {
-    req?.resolve(ok);
+  const close = (a: Answer) => {
+    req?.resolve(a);
     setReq(null);
   };
   if (!req) return null;
   const t = TONES[req.tone];
+  const alt = TONES[req.altTone];
+  const three = !!req.altLabel; // three buttons: stack them
 
   return (
-    <Modal transparent visible animationType="fade" onRequestClose={() => close(false)} statusBarTranslucent>
-      <Pressable style={st.backdrop} onPress={() => close(false)} accessibilityLabel="Close">
+    <Modal transparent visible animationType="fade" onRequestClose={() => close('cancel')} statusBarTranslucent>
+      <Pressable style={st.backdrop} onPress={() => close('cancel')} accessibilityLabel="Close">
         <Pressable style={st.card} onPress={() => {}} accessibilityRole="alert">
           <View style={[st.iconWrap, { backgroundColor: t.color + '1F', borderColor: t.color + '55' }]}>
             <Ionicons name={req.icon} size={28} color={t.color} />
           </View>
           <Text style={st.title}>{req.title}</Text>
           {!!req.message && <Text style={st.message}>{req.message}</Text>}
-          <View style={st.buttons}>
-            {!req.hideCancel && (
-              <Pressable onPress={() => close(false)} accessibilityRole="button"
-                style={({ pressed }) => [st.button, st.cancel, pressed && { opacity: 0.8 }]}>
-                <Text style={st.cancelText}>Cancel</Text>
-              </Pressable>
-            )}
-            <Pressable onPress={() => close(true)} accessibilityRole="button"
-              style={({ pressed }) => [st.button, { backgroundColor: t.color }, pressed && { opacity: 0.85 }]}>
+          <View style={[st.buttons, three && { flexDirection: 'column' }]}>
+            {!req.hideCancel && !three && <CancelButton onPress={() => close('cancel')} />}
+            <Pressable onPress={() => close('ok')} accessibilityRole="button"
+              style={({ pressed }) => [st.button, three && st.full, { backgroundColor: t.color }, pressed && { opacity: 0.85 }]}>
               {req.tone === 'whatsapp' && <Ionicons name="logo-whatsapp" size={18} color={t.on} />}
               <Text style={[st.okText, { color: t.on }]} numberOfLines={1}>{req.okLabel}</Text>
             </Pressable>
+            {three && (
+              <Pressable onPress={() => close('alt')} accessibilityRole="button"
+                style={({ pressed }) => [st.button, st.full, { borderWidth: 1, borderColor: alt.color }, pressed && { opacity: 0.85 }]}>
+                <Text style={[st.okText, { color: alt.color }]} numberOfLines={1}>{req.altLabel}</Text>
+              </Pressable>
+            )}
+            {!req.hideCancel && three && <CancelButton full onPress={() => close('cancel')} />}
           </View>
         </Pressable>
       </Pressable>
     </Modal>
+  );
+}
+
+function CancelButton({ onPress, full }: { onPress: () => void; full?: boolean }) {
+  return (
+    <Pressable onPress={onPress} accessibilityRole="button"
+      style={({ pressed }) => [st.button, full && st.full, st.cancel, pressed && { opacity: 0.8 }]}>
+      <Text style={st.cancelText}>Cancel</Text>
+    </Pressable>
   );
 }
 
@@ -102,6 +128,7 @@ const st = StyleSheet.create({
     flex: 1, height: 48, borderRadius: 24, flexDirection: 'row', gap: 8, alignItems: 'center', justifyContent: 'center',
     paddingHorizontal: 12,
   },
+  full: { flex: 0, alignSelf: 'stretch' },
   cancel: { borderWidth: 1, borderColor: '#3A3C42', backgroundColor: 'transparent' },
   cancelText: { color: c.text, fontFamily: font.semibold, fontSize: 15 },
   okText: { fontFamily: font.bold, fontSize: 15 },

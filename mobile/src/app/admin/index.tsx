@@ -112,13 +112,14 @@ export default function AdminDashboard() {
             </Panel>
 
             {/* 2. Trainer management */}
-            <Panel title="Trainer management" icon="barbell-outline" action={{ label: 'My trainers', onPress: () => go('/admin/trainers') }}>
+            <Panel title="Trainer management" icon="barbell-outline" action={{ label: 'All trainers', onPress: () => go('/admin/trainers') }}>
               {!d ? <Loading /> : (
                 <>
                   {d.trainers.length === 0
                     ? <Muted>No trainers yet.{inviteTrainers ? ' Invite one to get started.' : ''}</Muted>
                     : d.trainers.map((t) => (
-                      <TrainerLoadRow key={t.uid} name={t.displayName || t.email} detail={t.email} count={t.clientCount} max={maxLoad} />
+                      <TrainerLoadRow key={t.uid} name={t.displayName || t.email} detail={t.email} count={t.clientCount} max={maxLoad}
+                        onPress={() => go(`/coach/${t.uid}`)} />
                     ))}
                   {!can(user, 'manage_trainers') && (
                     <Muted>Activating / deactivating trainers needs access from the Super Admin.</Muted>
