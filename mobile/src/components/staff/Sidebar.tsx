@@ -33,7 +33,9 @@ export function Sidebar({ p, state, descriptors, navigateToTab, insets }: Bottom
       <View style={{ gap: 4, marginTop: 26 }}>
         {state.routes.map((route, i) => {
           const options = descriptors[route.key].options;
-          const hidden = (options.tabBarItemStyle as { display?: string } | undefined)?.display === 'none';
+          // Tabs hidden with href: null (e.g. an Admin without that access switch).
+          const hidden = (options as { hidden?: boolean }).hidden === true
+            || (options.tabBarItemStyle as { display?: string } | undefined)?.display === 'none';
           if (hidden) return null;
           const active = state.index === i;
           const color = active ? p.onAccent : p.textSecondary;
