@@ -1,9 +1,11 @@
 /** An error whose message is safe to send to the app. */
 export class HttpError extends Error {
-  constructor(status, message, code) {
+  constructor(status, message, code, details) {
     super(message);
     this.status = status;
     this.code = code;
+    // Extra safe-to-share data sent with the error (e.g. who to contact).
+    this.details = details;
     this.expose = true;
   }
 }

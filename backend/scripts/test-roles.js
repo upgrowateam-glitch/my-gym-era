@@ -219,6 +219,25 @@ async function run() {
   const stats = await api('GET', '/api/admin/stats', { token: sa.token });
   check('dashboard counts include pending invitations', stats.status === 200 && stats.data.pendingInvitations >= 1, stats.data);
 
+  // ── Support WhatsApp (shown to deactivated users) ─────────────────────────
+  console.log('Support WhatsApp number');
+  const before = (await api('GET', '/api/admin/settings', { token: sa.token })).data?.settings?.supportWhatsapp ?? null;
+  check('Admin cannot read app settings → 403', (await api('GET', '/api/admin/settings', { token: admin.token })).status === 403);
+  check('Admin cannot set the support number → 403',
+    (await api('PUT', '/api/admin/settings', { token: admin.token, body: { supportWhatsapp: '+911234567890' } })).status === 403);
+  check('invalid number refused → 400',
+    (await api('PUT', '/api/admin/settings', { token: sa.token, body: { supportWhatsapp: 'call me' } })).status === 400);
+  const setNum = await api('PUT', '/api/admin/settings', { token: sa.token, body: { supportWhatsapp: '+91 98765 43210' } });
+  check('Super Admin sets the support number', setNum.data?.settings?.supportWhatsapp === '+919876543210', setNum.data);
+  await api('PATCH', `/api/users/${tom.id}`, { token: sa.token, body: { isArchived: true } });
+  const wrongPw = await api('POST', '/api/auth/login', { body: { email: mail('tom'), password: 'wrong-pass' } });
+  check('wrong password: no contact details given', wrongPw.status === 401 && !wrongPw.data?.details, wrongPw.data);
+  const blocked = await api('POST', '/api/auth/login', { body: { email: mail('tom'), password: 'tom-pass-1' } });
+  check('deactivated login gets their name and the support number', blocked.status === 403
+    && blocked.data?.details?.supportWhatsapp === '+919876543210' && !!blocked.data.details.name && !blocked.data.token, blocked.data);
+  await api('PATCH', `/api/users/${tom.id}`, { token: sa.token, body: { isArchived: false } });
+  await api('PUT', '/api/admin/settings', { token: sa.token, body: { supportWhatsapp: before ?? '' } });
+
   // ── Super Admin dashboard ─────────────────────────────────────────────────
   console.log('Super Admin dashboard');
   const ov = await api('GET', '/api/admin/overview', { token: sa.token });

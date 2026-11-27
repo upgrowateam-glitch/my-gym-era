@@ -13,6 +13,7 @@ export default function SettingsLayout() {
     >
       <Stack.Screen name="index" options={{ headerShown: false }} />
       <Stack.Screen name="profile" options={{ title: 'My Profile', headerShown: false }} />
+      <Stack.Screen name="support" options={{ title: 'Support WhatsApp', headerShown: false }} />
     </Stack>
   );
 }

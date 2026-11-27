@@ -3,6 +3,7 @@ import { query, withTransaction } from '../db.js';
 import { hashPassword, verifyPassword, burnTime, MIN_PASSWORD_LENGTH } from '../auth/passwords.js';
 import { signToken } from '../auth/tokens.js';
 import { requireAuth, ARCHIVED_MESSAGE } from '../middleware/auth.js';
+import { getSetting } from '../settings.js';
 import { USER_COLUMNS, toPublicUser, loadTestClients } from '../users/userModel.js';
 import { badRequest, unauthorized, forbidden, conflict } from '../errors.js';
 
@@ -77,7 +78,17 @@ authRouter.post('/login', async (req, res) => {
   if (!(await verifyPassword(password, row.password_hash))) {
     throw unauthorized(INVALID_LOGIN, 'invalid_credentials');
   }
-  if (row.is_archived) throw forbidden(ARCHIVED_MESSAGE, 'account_archived');
+  if (row.is_archived) {
+    // The password was right, so it is safe to tell them who they are and how
+    // to reach the gym (the Super Admin's support WhatsApp number, if set).
+    const err = forbidden(ARCHIVED_MESSAGE, 'account_archived');
+    err.details = {
+      name: row.display_name || null,
+      email: row.email,
+      supportWhatsapp: await getSetting('support_whatsapp'),
+    };
+    throw err;
+  }
 
   delete row.password_hash;
   res.json(await sessionResponse(row));

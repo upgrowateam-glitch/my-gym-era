@@ -11,12 +11,14 @@ import { SUPER as p } from '@/theme/palettes';
 export default function SuperAdminSettings() {
   const { logout } = useAuth();
   return (
-    <Page p={p} kicker="SUPER SUPER" title="Settings">
+    <Page p={p} kicker="SUPER ADMIN" title="Settings">
       <Card p={p} style={{ padding: 6, gap: 0 }}>
         <Item icon="people-circle-outline" title="User Management" detail="Admins, trainers and users · activate, deactivate, access"
           onPress={() => router.push('/super-admin/users')} />
         <Item icon="mail-outline" title="Invitations" detail="Invite Admins and Trainers"
           onPress={() => router.push('/super-admin/invitations')} />
+        <Item icon="logo-whatsapp" title="Support WhatsApp" detail="Where deactivated users can message the gym"
+          onPress={() => router.push('/super-admin/settings/support')} />
         <Item icon="person-outline" title="My Profile" detail="Name, WhatsApp, password"
           onPress={() => router.push('/super-admin/settings/profile')} />
         <Item icon="log-out-outline" title="Log out" danger

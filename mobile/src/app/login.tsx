@@ -13,6 +13,7 @@ import {
   AuthAccentProvider, AuthField, GlowCard, GOLD, Message, OrDivider, PhotoBackdrop, PhotoHeading, PrimaryButton,
   SocialButton, Tagline,
 } from '@/components/auth/AuthUI';
+import { SupportContact, type SupportDetails } from '@/components/auth/SupportContact';
 
 const BACKGROUND = require('../../assets/auth/signin-bg.jpg');
 
@@ -28,6 +29,8 @@ export default function LoginScreen() {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [info, setInfo] = useState<string | null>(null);
+  // Set when the account is deactivated: lets them message the gym on WhatsApp.
+  const [support, setSupport] = useState<SupportDetails | null>(null);
 
   if (user) return <Redirect href={homeRouteFor(user)} />;
 
@@ -43,12 +46,14 @@ export default function LoginScreen() {
     }
     setBusy(true);
     setError(null);
+    setSupport(null);
     try {
       await login(email.trim(), password);
       // First sign-in of a new account: the fitness profile form (welcome form).
       router.replace(justCreated ? '/profile-setup' : '/');
     } catch (e) {
       setError(e instanceof ApiError ? e.message : 'Something went wrong. Please try again.');
+      if (e instanceof ApiError && e.code === 'account_archived' && e.details) setSupport(e.details as unknown as SupportDetails);
     } finally {
       setBusy(false);
     }
@@ -73,6 +78,7 @@ export default function LoginScreen() {
                 {justCreated && !error && <Message text="Account created. Please sign in with your new password." kind="info" />}
                 {notice && !error && <Message text={notice} kind="info" />}
                 {error && <Message text={error} />}
+                {support && <SupportContact details={support} />}
                 {info && <Message text={info} kind="info" />}
 
                 <GlowCard>

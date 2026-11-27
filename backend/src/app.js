@@ -73,6 +73,7 @@ export function createApp() {
     res.status(status).json({
       error: err.expose ? err.message : 'Internal server error',
       ...(err.expose && err.code ? { code: err.code } : {}),
+      ...(err.expose && err.details ? { details: err.details } : {}),
     });
   });
 

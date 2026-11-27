@@ -15,6 +15,9 @@ import { requireAuth, requireRole } from '../middleware/auth.js';
 import { USER_COLUMNS, TRAINER_NAME_COLUMN, toPublicUser } from '../users/userModel.js';
 import { SELECT_INVITATION, toInvitation } from './invitations.js';
 import * as v from '../validate.js';
+import { badRequest } from '../errors.js';
+import { normaliseWhatsapp } from '../users/userModel.js';
+import { getSetting, setSetting } from '../settings.js';
 
 export const adminRouter = Router();
 adminRouter.use(requireAuth, requireRole('admin'));
@@ -70,6 +73,24 @@ adminRouter.get('/trainers', async (req, res) => {
 // ── Super Admin dashboard ───────────────────────────────────────────────────
 // GET /api/admin/overview   (Super Admin only) everything the dashboard shows,
 // in one request. Only real numbers from the database.
+// ── App settings (Super Admin only) ─────────────────────────────────────────
+// supportWhatsapp: shown to deactivated users on the sign-in page.
+adminRouter.get('/settings', requireRole('super_admin'), async (_req, res) => {
+  res.json({ settings: { supportWhatsapp: await getSetting('support_whatsapp') } });
+});
+
+adminRouter.put('/settings', requireRole('super_admin'), async (req, res) => {
+  v.jsonObject(req.body, 'body');
+  if (req.body.supportWhatsapp !== undefined) {
+    const number = normaliseWhatsapp(req.body.supportWhatsapp);
+    if (number === undefined) {
+      throw badRequest('Enter a valid WhatsApp number with country code, e.g. +91 98765 43210.', 'invalid_whatsapp');
+    }
+    await setSetting('support_whatsapp', number, req.user.id);
+  }
+  res.json({ settings: { supportWhatsapp: await getSetting('support_whatsapp') } });
+});
+
 adminRouter.get('/overview', requireRole('super_admin'), async (_req, res) => {
   const [counts, invitationCounts, latestInvitations, signups, recentUsers, trainers, library] = await Promise.all([
     query(`

@@ -147,6 +147,7 @@ export default function SuperAdminDashboard() {
               <LinkList items={[
                 { icon: 'people-circle-outline', label: 'User management', onPress: () => go('/super-admin/users') },
                 { icon: 'mail-outline', label: 'Invitations', onPress: () => go('/super-admin/invitations') },
+                { icon: 'logo-whatsapp', label: 'Support WhatsApp', onPress: () => go('/super-admin/settings/support') },
                 { icon: 'person-outline', label: 'My profile', onPress: () => go('/super-admin/settings/profile') },
                 { icon: 'settings-outline', label: 'All settings', onPress: () => go('/super-admin/settings') },
               ]} />

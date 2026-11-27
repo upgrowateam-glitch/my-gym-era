@@ -52,7 +52,8 @@ if (__DEV__) console.log('[api] API_URL in dev =', API_URL);
 
 /** An error from the server (or a connection problem, status 0). `message` is safe to show. */
 export class ApiError extends Error {
-  constructor(public status: number, message: string, public code?: string) {
+  /** details: extra data some errors carry (e.g. who to contact when an account is deactivated). */
+  constructor(public status: number, message: string, public code?: string, public details?: Record<string, unknown>) {
     super(message);
   }
 }
@@ -110,7 +111,7 @@ async function request<T>(method: string, path: string, body?: unknown, query?: 
     const sessionProblem =
       (res.status === 401 && (code === 'invalid_token' || code === 'unauthorized')) || code === 'account_archived';
     if (sessionProblem && token && !path.startsWith('/api/auth/login')) onSessionInvalid?.();
-    throw new ApiError(res.status, message, code);
+    throw new ApiError(res.status, message, code, data?.details ?? undefined);
   }
   return data as T;
 }
