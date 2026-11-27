@@ -1,0 +1,37 @@
+# What EAS Build uploads to build the phone app (this replaces .gitignore for EAS).
+# Only mobile/ is needed: leave out the server, the design images and anything secret.
+
+# Not needed for the app build
+design-reference/
+backend/
+docker-compose.yml
+.claude/
+mobile/.claude/
+
+# Never upload secrets: every .env file stays on its own computer.
+.env
+.env.*
+!.env.example
+
+# Downloaded libraries (EAS installs them itself)
+node_modules/
+
+# Build output and caches
+mobile/dist/
+mobile/.expo/
+mobile/web-build/
+mobile/expo-env.d.ts
+.metro-health-check*
+
+# Signing files must never be uploaded this way
+*.jks
+*.p8
+*.p12
+*.key
+*.mobileprovision
+
+# Logs and system files
+*.log
+npm-debug.*
+.DS_Store
+Thumbs.db
