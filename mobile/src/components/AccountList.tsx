@@ -4,13 +4,14 @@
 // assigned trainer.
 
 import { useState } from 'react';
-import { Pressable, Text, View } from 'react-native';
+import { Linking, Pressable, Text, View } from 'react-native';
 import { router } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '@/lib/auth';
 import { api, ApiError } from '@/lib/api';
 import { useApi } from '@/lib/useApi';
 import { confirm } from '@/lib/confirm';
+import { appBaseUrl, whatsappUrl } from '@/lib/links';
 import {
   ALL_PERMISSIONS, PERMISSION_LABELS, ROLE_LABELS, type Permission, type Role, type TrainerSummary, type User,
 } from '@/lib/types';
@@ -35,6 +36,7 @@ export function AccountList({ p, roles, canToggle, canEditAccess, canAssignTrain
   const [search, setSearch] = useState('');
   const [show, setShow] = useState<Show>('all');
   const [error, setError] = useState<string | null>(null);
+  const [info, setInfo] = useState<string | null>(null);
   const [busyId, setBusyId] = useState<string | null>(null);
   const [openId, setOpenId] = useState<string | null>(null);
   const [assignOpenId, setAssignOpenId] = useState<string | null>(null);
@@ -75,17 +77,36 @@ export function AccountList({ p, roles, canToggle, canEditAccess, canAssignTrain
   async function setActive(u: User, active: boolean) {
     if (!active && !(await confirm(`Deactivate ${u.displayName || u.email}?`,
       'They will be signed out and cannot log in until reactivated.', 'Deactivate'))) return;
-    await update(u, { isArchived: !active });
+    const ok = await update(u, { isArchived: !active });
+    if (!ok || !active) return;
+    // Reactivated: offer to tell them on WhatsApp (opens WhatsApp with the message ready; you tap Send).
+    const name = u.displayName?.split(' ')[0] || 'there';
+    if (!u.whatsapp) {
+      setInfo(`${u.displayName || u.email} is active again. They have no WhatsApp number saved, so please let them know another way.`);
+      return;
+    }
+    if (await confirm(`${u.displayName || u.email} is active again`, `Tell ${name} on WhatsApp that they can sign in now?`, 'Open WhatsApp')) {
+      const message = `Hi ${name}, good news! Your FitZone account is active again. You can sign in now: ${appBaseUrl()}/login`;
+      try {
+        await Linking.openURL(whatsappUrl(u.whatsapp, message));
+      } catch {
+        setError('Could not open WhatsApp. Please check that WhatsApp is installed.');
+      }
+    }
   }
 
-  async function update(u: User, body: object) {
+  /** Saves a change; true when it worked. */
+  async function update(u: User, body: object): Promise<boolean> {
     setBusyId(u.uid);
     setError(null);
+    setInfo(null);
     try {
       const res = await api.patch<{ user: User }>(`/api/users/${u.uid}`, body);
       list.setData((cur) => (cur ?? []).map((x) => (x.uid === u.uid ? res.user : x)));
+      return true;
     } catch (e) {
       setError(e instanceof ApiError ? e.message : 'Could not update the account.');
+      return false;
     } finally {
       setBusyId(null);
     }
@@ -102,6 +123,7 @@ export function AccountList({ p, roles, canToggle, canEditAccess, canAssignTrain
         ]} />
       )}
       {(error || list.error || trainers.error) && <Notice text={(error ?? list.error ?? trainers.error)!} />}
+      {info && <Notice kind="info" text={info} />}
       {list.data && shown.length === 0 && (
         <Empty p={p} icon="people-outline"
           text={show === 'unassigned' && (list.data.length > 0) ? 'Every user has a trainer.' : emptyText} />
