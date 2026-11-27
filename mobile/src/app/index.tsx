@@ -13,10 +13,13 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { homeRouteFor, useAuth } from '@/lib/auth';
 import { useFitZoneFonts } from '@/lib/fonts';
 import { LoadingScreen } from '@/components/LoadingScreen';
-import { FitZoneBackdrop, FitZoneLogo, Glow } from '@/components/fitzone/Brand';
+import { GOLD } from '@/components/auth/AuthUI';
 import { fitzone as c, font } from '@/theme/colors';
 
 const SPLASH_MS = 1500;
+const LOGO = require('../../assets/brand/logo.png');
+/** Background of the logo picture (and of the phone's own start screen, app.json). */
+const LOGO_BG = '#202020';
 let splashPlayed = false; // per app start (module memory resets when the app restarts)
 
 export default function Index() {
@@ -33,7 +36,7 @@ export default function Index() {
   if (timeUp && !loading) {
     return <Redirect href={user ? homeRouteFor(user) : '/welcome'} />;
   }
-  return playing ? <Splash /> : <LoadingScreen color={c.mint} background={c.bg} />;
+  return playing ? <Splash /> : <LoadingScreen color={GOLD.main} background={c.bg} />;
 }
 
 function Splash() {
@@ -51,57 +54,48 @@ function Splash() {
     if (fontsReady) Animated.timing(fade, { toValue: 1, duration: 350, useNativeDriver: Platform.OS !== 'web' }).start();
   }, [fontsReady, fade]);
 
-  const art = Math.min(w * 0.72, screenH * 0.32, 330);
+  const logo = Math.min(w * 0.82, screenH * 0.46, 380);
   const barW = Math.min(w * 0.42, 180);
 
   return (
     <View style={styles.root}>
-      <FitZoneBackdrop />
       <SafeAreaView style={styles.safe}>
-        {fontsReady && (
-          <Animated.View style={[styles.column, { width: w, opacity: fade }]}>
-            <View style={styles.top}>
-              <FitZoneLogo size={Math.min(40, w * 0.1)} />
+        <View style={[styles.column, { width: w }]}>
+          <View style={{ flex: 1 }} />
+          {/* The logo shows straight away, so it follows on from the phone's own start screen. */}
+          <View style={[styles.logoBox, { width: logo, height: logo }]}>
+            <Image source={LOGO} contentFit="contain" style={{ width: logo, height: logo }}
+              accessibilityLabel="FitZone" />
+          </View>
+
+          <Animated.View style={[styles.bottom, { opacity: fade, flex: 1 }]}>
+            {fontsReady && <>
               <Text style={styles.motto}>TRAIN  •  TRANSFORM  •  THRIVE</Text>
-            </View>
-
-            <View style={[styles.artBox, { height: art * 0.8 }]}>
-              <Glow width={art * 1.5} height={art * 0.9} opacity={0.3} />
-              <Glow width={art * 1.1} height={art * 0.16} opacity={0.5} style={{ bottom: art * 0.02 }} />
-              <Image
-                source={require('../../assets/fitzone/equipment/dumbbell.png')}
-                contentFit="contain"
-                style={{ width: art, height: art * (467 / 778) }}
-                accessibilityIgnoresInvertColors
-              />
-            </View>
-
-            <View style={styles.bottom}>
+              <View style={{ flex: 1 }} />
               <Text style={styles.quote}>
-                A healthier you is a <Text style={{ color: c.mint }}>stronger you</Text>
+                A healthier you is a <Text style={{ color: GOLD.main }}>stronger you</Text>
               </Text>
               <View style={[styles.track, { width: barW }]}>
                 <Animated.View
                   style={[styles.fill, { width: progress.interpolate({ inputRange: [0, 1], outputRange: [0, barW] }) }]}
                 />
               </View>
-            </View>
+            </>}
           </Animated.View>
-        )}
+        </View>
       </SafeAreaView>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  root: { flex: 1, backgroundColor: c.bg },
+  root: { flex: 1, backgroundColor: LOGO_BG },
   safe: { flex: 1, alignItems: 'center' },
-  column: { flex: 1, paddingHorizontal: 24, paddingVertical: 28, alignItems: 'center', justifyContent: 'space-between' },
-  top: { alignItems: 'center', gap: 16, marginTop: '14%' },
-  motto: { color: c.textSecondary, fontFamily: font.medium, fontSize: 12.5, letterSpacing: 2.6 },
-  artBox: { alignSelf: 'stretch', alignItems: 'center', justifyContent: 'center' },
-  bottom: { alignItems: 'center', gap: 22, marginBottom: 12 },
+  column: { flex: 1, paddingHorizontal: 24, paddingTop: 28, paddingBottom: 40, alignItems: 'center' },
+  logoBox: { alignItems: 'center', justifyContent: 'center' },
+  motto: { color: GOLD.light, fontFamily: font.medium, fontSize: 12.5, letterSpacing: 2.6, marginTop: 8 },
+  bottom: { alignItems: 'center', gap: 22, alignSelf: 'stretch' },
   quote: { color: c.text, fontFamily: font.semibold, fontSize: 18, textAlign: 'center' },
   track: { height: 4, borderRadius: 2, backgroundColor: 'rgba(255,255,255,0.10)', overflow: 'hidden' },
-  fill: { height: 4, borderRadius: 2, backgroundColor: c.mint },
+  fill: { height: 4, borderRadius: 2, backgroundColor: GOLD.main },
 });

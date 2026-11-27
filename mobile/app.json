@@ -3,7 +3,7 @@
     "name": "FitZone",
     "slug": "my-gym-era",
     "scheme": "mygymera",
-    "version": "1.0.0",
+    "version": "1.0.1",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "dark",
@@ -14,11 +14,10 @@
     },
     "android": {
       "package": "com.mygymera.app",
+      "versionCode": 2,
       "adaptiveIcon": {
-        "backgroundColor": "#050607",
-        "foregroundImage": "./assets/android-icon-foreground.png",
-        "backgroundImage": "./assets/android-icon-background.png",
-        "monochromeImage": "./assets/android-icon-monochrome.png"
+        "backgroundColor": "#202020",
+        "foregroundImage": "./assets/android-icon-foreground.png"
       },
       "predictiveBackGestureEnabled": false
     },
@@ -41,7 +40,16 @@
       "expo-status-bar",
       "expo-image",
       "expo-font",
-      "expo-updates"
+      "expo-updates",
+      [
+        "expo-splash-screen",
+        {
+          "backgroundColor": "#202020",
+          "image": "./assets/splash-icon.png",
+          "imageWidth": 240,
+          "resizeMode": "contain"
+        }
+      ]
     ],
     "extra": {
       "router": {
