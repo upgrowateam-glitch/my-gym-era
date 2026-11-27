@@ -181,7 +181,7 @@ function InviteForm({ p, allowAdmin, onCreated, onCancel }: {
 function SharePanel({ p, shareable, onDone }: { p: Palette; shareable: Shareable; onDone: () => void }) {
   const { invitation, url } = shareable;
   const [copied, setCopied] = useState(false);
-  const message = `Hi ${invitation.name}, you're invited to join My Gym Era as ${ROLE_LABELS[invitation.role]}. `
+  const message = `Hi ${invitation.name}, you're invited to join FitZone as ${ROLE_LABELS[invitation.role]}. `
     + `Create your account here (link valid until ${fmt(invitation.expiresAt)}):\n${url}`;
 
   async function copy() {
@@ -193,7 +193,7 @@ function SharePanel({ p, shareable, onDone }: { p: Palette; shareable: Shareable
   async function share() {
     try {
       if (Platform.OS === 'web' && !(typeof navigator !== 'undefined' && 'share' in navigator)) return copy();
-      await Share.share({ message, url: Platform.OS === 'ios' ? url : undefined, title: 'My Gym Era invitation' });
+      await Share.share({ message, url: Platform.OS === 'ios' ? url : undefined, title: 'FitZone invitation' });
     } catch {
       // cancelled
     }
