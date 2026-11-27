@@ -2,11 +2,15 @@
 
 import { Platform } from 'react-native';
 import Constants from 'expo-constants';
+import { API_URL } from './api';
 
 /**
  * Web address of the app, used in invitation links.
  * - EXPO_PUBLIC_APP_URL in mobile/.env (e.g. https://app.yourdomain.com) when set.
- * - Otherwise (development): the web version on this computer (port 8081),
+ * - Website: the address it was opened on.
+ * - Installed app (APK): the server address — on the VPS the website and the
+ *   server share one address (https://fitzone.upgrowa.cloud).
+ * - Development (Expo Go): the web version on this computer (port 8081),
  *   so links can be opened on any device on the same Wi-Fi.
  */
 export function appBaseUrl(): string {
@@ -15,6 +19,7 @@ export function appBaseUrl(): string {
   if (Platform.OS === 'web' && typeof window !== 'undefined' && window.location?.origin) {
     return window.location.origin;
   }
+  if (!__DEV__) return API_URL;
   const host = Constants.expoConfig?.hostUri?.split(':')[0];
   return host ? `http://${host}:8081` : 'http://localhost:8081';
 }
