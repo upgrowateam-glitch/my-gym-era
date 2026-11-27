@@ -11,7 +11,8 @@ export default function AdminUsers() {
   if (!can(user, 'view_users')) return <Redirect href="/admin" />;
   return (
     <Page p={p} kicker="ADMIN" title="Users">
-      <AccountList p={p} roles={['client']} canToggle={false} emptyText="No users yet. Users sign up in the app." />
+      <AccountList p={p} roles={['client']} canToggle={false} canAssignTrainer
+        emptyText="No users yet. Users sign up in the app." />
     </Page>
   );
 }

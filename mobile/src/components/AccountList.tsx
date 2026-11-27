@@ -1,6 +1,7 @@
 // List of accounts of one kind (admins, trainers or users) with search,
 // active / deactivated status, and — where allowed — an activate/deactivate
-// switch and the Admin access switches (Super Admin only).
+// switch, the Admin access switches (Super Admin only) and, for users, the
+// assigned trainer.
 
 import { useState } from 'react';
 import { Pressable, Text, View } from 'react-native';
@@ -9,10 +10,15 @@ import { useAuth } from '@/lib/auth';
 import { api, ApiError } from '@/lib/api';
 import { useApi } from '@/lib/useApi';
 import { confirm } from '@/lib/confirm';
-import { ALL_PERMISSIONS, PERMISSION_LABELS, ROLE_LABELS, type Permission, type Role, type User } from '@/lib/types';
-import { Avatar, Badge, Card, Empty, Field, Notice, ToggleRow, type Palette } from './ui/UI';
+import {
+  ALL_PERMISSIONS, PERMISSION_LABELS, ROLE_LABELS, type Permission, type Role, type TrainerSummary, type User,
+} from '@/lib/types';
+import { TrainerAssign } from './TrainerAssign';
+import { Avatar, Badge, Card, Chips, Empty, Field, Notice, ToggleRow, type Palette } from './ui/UI';
 
-export function AccountList({ p, roles, canToggle, canEditAccess, emptyText }: {
+type Show = 'all' | 'unassigned';
+
+export function AccountList({ p, roles, canToggle, canEditAccess, canAssignTrainer, emptyText }: {
   p: Palette;
   /** Roles shown, e.g. ['admin', 'super_admin'] or ['trainer']. */
   roles: Role[];
@@ -20,22 +26,50 @@ export function AccountList({ p, roles, canToggle, canEditAccess, emptyText }: {
   canToggle: boolean;
   /** Super Admin: may edit Admin access switches. */
   canEditAccess?: boolean;
+  /** Users list: may assign users to trainers (Super Admin, or Admin with "view users"). */
+  canAssignTrainer?: boolean;
   emptyText: string;
 }) {
   const { user: me } = useAuth();
   const [search, setSearch] = useState('');
+  const [show, setShow] = useState<Show>('all');
   const [error, setError] = useState<string | null>(null);
   const [busyId, setBusyId] = useState<string | null>(null);
   const [openId, setOpenId] = useState<string | null>(null);
+  const [assignOpenId, setAssignOpenId] = useState<string | null>(null);
 
   const list = useApi(async () => {
     const all = await Promise.all(roles.map((role) => api.get<{ users: User[] }>('/api/users', { role })));
     return all.flatMap((r) => r.users);
   });
 
+  // Trainers that may be assigned (Super Admin: all; Admin: their own). Active only.
+  const trainers = useApi(async () => (canAssignTrainer
+    ? (await api.get<{ trainers: TrainerSummary[] }>('/api/admin/trainers')).trainers
+    : []));
+
   const q = search.trim().toLowerCase();
   const shown = (list.data ?? []).filter((u) =>
-    !q || u.displayName.toLowerCase().includes(q) || u.email.toLowerCase().includes(q) || (u.whatsapp ?? '').includes(q));
+    (show === 'all' || !u.trainerId)
+    && (!q || u.displayName.toLowerCase().includes(q) || u.email.toLowerCase().includes(q) || (u.whatsapp ?? '').includes(q)));
+  const unassignedCount = (list.data ?? []).filter((u) => !u.trainerId).length;
+
+  async function assignTrainer(u: User, trainerId: string | null) {
+    if (trainerId === null && !(await confirm(`Remove the trainer from ${u.displayName || u.email}?`,
+      'They will have no trainer until you assign one again.', 'Remove'))) return;
+    setBusyId(u.uid);
+    setError(null);
+    try {
+      const res = await api.put<{ user: User }>(`/api/users/${u.uid}/trainer`, { trainerId });
+      list.setData((cur) => (cur ?? []).map((x) => (x.uid === u.uid ? res.user : x)));
+      setAssignOpenId(null);
+      void trainers.reload(); // refresh the "n users" counts
+    } catch (e) {
+      setError(e instanceof ApiError ? e.message : 'Could not change the trainer.');
+    } finally {
+      setBusyId(null);
+    }
+  }
 
   async function setActive(u: User, active: boolean) {
     if (!active && !(await confirm(`Deactivate ${u.displayName || u.email}?`,
@@ -60,8 +94,17 @@ export function AccountList({ p, roles, canToggle, canEditAccess, emptyText }: {
     <View style={{ gap: 12 }}>
       <Field p={p} label="Search" icon="search-outline" value={search} onChangeText={setSearch}
         placeholder="Name, email or WhatsApp" autoCapitalize="none" />
-      {(error || list.error) && <Notice text={(error ?? list.error)!} />}
-      {list.data && shown.length === 0 && <Empty p={p} icon="people-outline" text={emptyText} />}
+      {canAssignTrainer && (
+        <Chips p={p} value={show} onChange={setShow} options={[
+          { value: 'all', label: 'All' },
+          { value: 'unassigned', label: `No trainer (${unassignedCount})` },
+        ]} />
+      )}
+      {(error || list.error || trainers.error) && <Notice text={(error ?? list.error ?? trainers.error)!} />}
+      {list.data && shown.length === 0 && (
+        <Empty p={p} icon="people-outline"
+          text={show === 'unassigned' && (list.data.length > 0) ? 'Every user has a trainer.' : emptyText} />
+      )}
       {shown.map((u) => {
         const self = u.uid === me?.uid;
         const toggleAllowed = canToggle && !self && u.role !== 'super_admin';
@@ -84,6 +127,12 @@ export function AccountList({ p, roles, canToggle, canEditAccess, emptyText }: {
                 </View>
               </View>
             </View>
+            {canAssignTrainer && u.role === 'client' && (
+              <TrainerAssign p={p} user={u} trainers={trainers.data} open={assignOpenId === u.uid}
+                busy={busyId === u.uid}
+                onToggle={() => setAssignOpenId(assignOpenId === u.uid ? null : u.uid)}
+                onAssign={(trainerId) => assignTrainer(u, trainerId)} />
+            )}
             {toggleAllowed && (
               <ToggleRow p={p} title="Account active" value={!u.isArchived} onChange={(v) => setActive(u, v)}
                 disabled={busyId === u.uid} />

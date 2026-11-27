@@ -28,7 +28,8 @@ export default function UserManagement() {
       ]} />
       <View>
         {/* key: remount the list (and reload) when the tab changes */}
-        <AccountList key={tab} p={p} roles={ROLES[tab]} canToggle canEditAccess={tab === 'admins'} emptyText={EMPTY[tab]} />
+        <AccountList key={tab} p={p} roles={ROLES[tab]} canToggle canEditAccess={tab === 'admins'}
+          canAssignTrainer={tab === 'users'} emptyText={EMPTY[tab]} />
       </View>
     </ScrollView>
   );

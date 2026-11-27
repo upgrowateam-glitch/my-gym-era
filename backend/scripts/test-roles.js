@@ -236,6 +236,27 @@ async function run() {
   console.log('Trainer privacy');
   const tom2 = await login(mail('tom'), 'tom-pass-1');
   const ot = await login(otherTrainer.email);
+  // ── Assigning users to trainers ─────────────────────────────────────────────
+  const assignByAdmin = await api('PUT', `/api/users/${user.id}/trainer`, { token: admin.token, body: { trainerId: tom.id } });
+  check('Admin assigns a user to their own trainer',
+    assignByAdmin.status === 200 && assignByAdmin.data.user.trainerId === tom.id && assignByAdmin.data.user.trainerName === 'Tom Trainer', assignByAdmin);
+  check('Admin cannot assign to another Admin\'s trainer → 400',
+    (await api('PUT', `/api/users/${user.id}/trainer`, { token: admin.token, body: { trainerId: otherTrainer.id } })).data?.code === 'invalid_trainer');
+  check('Admin without "view users" cannot assign → 403',
+    (await api('PUT', `/api/users/${user.id}/trainer`, { token: ba.token, body: { trainerId: tom.id } })).status === 403);
+  check('Trainer cannot assign users → 403',
+    (await api('PUT', `/api/users/${user.id}/trainer`, { token: tom2.token, body: { trainerId: tom.id } })).status === 403);
+  check('User cannot pick their own trainer → 403',
+    (await api('PUT', `/api/users/me/trainer`, { token: user.token, body: { trainerId: tom.id } })).status === 403);
+  check('only Users can be assigned → 400',
+    (await api('PUT', `/api/users/${tom.id}/trainer`, { token: sa.token, body: { trainerId: otherTrainer.id } })).data?.code === 'not_a_user');
+  const unassigned = await api('PUT', `/api/users/${user.id}/trainer`, { token: admin.token, body: { trainerId: null } });
+  check('Admin can unassign', unassigned.status === 200 && unassigned.data.user.trainerId === null, unassigned);
+  const assignBySa = await api('PUT', `/api/users/${user.id}/trainer`, { token: sa.token, body: { trainerId: otherTrainer.id } });
+  check('Super Admin can assign to any trainer', assignBySa.data?.user?.trainerId === otherTrainer.id, assignBySa);
+  const unassignedList = await api('GET', '/api/users?role=client&unassigned=true', { token: sa.token });
+  check('"unassigned" filter leaves out assigned users', !unassignedList.data?.users?.some((u) => u.uid === user.id));
+
   await api('PUT', `/api/users/${user.id}/trainer`, { token: sa.token, body: { trainerId: tom.id } });
   check('trainer sees their assigned user', (await api('GET', `/api/users/${user.id}`, { token: tom2.token })).status === 200);
   check('another trainer cannot see that user → 403', (await api('GET', `/api/users/${user.id}`, { token: ot.token })).status === 403);
