@@ -17,6 +17,8 @@ export const CHOICES = {
   smoking: ['never', 'quit', 'current'],
   goal: ['lose_weight', 'build_muscle', 'get_fitter', 'endurance', 'flexibility', 'stay_healthy'],
   experience: ['beginner', 'intermediate', 'advanced'],
+  pastTraining: ['gym', 'home', 'running', 'yoga', 'sports', 'swimming', 'none'],
+  trainingDuration: ['under_6_months', '6_to_12_months', '1_to_3_years', 'over_3_years'],
   workType: ['desk', 'mixed', 'physical'],
   activityLevel: ['sedentary', 'light', 'moderate', 'active', 'very_active'],
   workoutTime: ['early_morning', 'morning', 'afternoon', 'evening', 'night', 'flexible'],
@@ -109,12 +111,24 @@ export function validateSection(section, data) {
       };
     }
     case 'goals': {
-      only(data, ['mainGoal', 'extraGoals', 'experience'], section);
+      only(data, ['mainGoal', 'extraGoals', 'experience', 'pastTraining', 'trainingDuration', 'experienceNotes'], section);
       const mainGoal = v.oneOf(data.mainGoal, 'mainGoal', CHOICES.goal);
       const extra = data.extraGoals === undefined ? [] : v.stringArray(data.extraGoals, 'extraGoals', { maxItems: 5 });
       for (const g of extra) v.oneOf(g, 'extraGoals', CHOICES.goal);
       const extraGoals = [...new Set(extra)].filter((g) => g !== mainGoal);
-      return { data: { mainGoal, extraGoals, experience: v.oneOf(data.experience, 'experience', CHOICES.experience) } };
+      const experience = v.oneOf(data.experience, 'experience', CHOICES.experience);
+
+      // Previous workout experience: what they did before and for how long.
+      const past = [...new Set(v.stringArray(data.pastTraining ?? [], 'pastTraining', { maxItems: 7 }))];
+      for (const t of past) v.oneOf(t, 'pastTraining', CHOICES.pastTraining);
+      if (past.length === 0) throw badRequest('Please choose the training you have done before (or "None").', 'invalid_past_training');
+      if (past.includes('none') && past.length > 1) {
+        throw badRequest('"None" cannot be combined with other training types.', 'invalid_past_training');
+      }
+      const none = past[0] === 'none';
+      const trainingDuration = none ? null : v.oneOf(data.trainingDuration, 'trainingDuration', CHOICES.trainingDuration);
+      const experienceNotes = optionalText(data.experienceNotes, 'Experience notes', 300);
+      return { data: { mainGoal, extraGoals, experience, pastTraining: past, trainingDuration, experienceNotes } };
     }
     case 'routine': {
       only(data, ['workType', 'activityLevel', 'workoutDays', 'workoutTime'], section);

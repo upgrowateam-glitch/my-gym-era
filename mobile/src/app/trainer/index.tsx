@@ -4,6 +4,7 @@
 
 import { useState } from 'react';
 import { RefreshControl, ScrollView, View, type LayoutChangeEvent } from 'react-native';
+import { router } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAuth } from '@/lib/auth';
 import { api } from '@/lib/api';
@@ -55,10 +56,11 @@ export default function TrainerDashboard() {
           <Grid twoCols={twoCols}>
             {/* My assigned users */}
             <Panel title="My assigned users" icon="people-outline">
+              {d && d.users.length > 0 && <Muted>Tap a user to see their fitness profile.</Muted>}
               {!d ? <Loading /> : d.users.length === 0
                 ? <Muted>No users assigned to you yet. Your admin will assign users to you.</Muted>
                 : d.users.map((u) => (
-                  <PersonRow key={u.uid} name={u.displayName || u.email}
+                  <PersonRow key={u.uid} name={u.displayName || u.email} onPress={() => router.push(`/member/${u.uid}`)}
                     right={u.unreadMessages ? `${fmt(u.unreadMessages)} new` : shortDate(u.createdAt)}
                     detail={`${u.profileCompleted ? 'Profile complete' : 'Onboarding not finished'}${u.currentStreak ? ` · 🔥 ${u.currentStreak}-day streak` : ''}`} />
                 ))}

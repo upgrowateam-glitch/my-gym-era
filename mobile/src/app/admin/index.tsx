@@ -101,7 +101,7 @@ export default function AdminDashboard() {
                   <SubHead>Newest users</SubHead>
                   {newest.length === 0 ? <Muted>No users yet. Users sign up in the app.</Muted>
                     : newest.map((u) => (
-                      <PersonRow key={u.uid} name={u.displayName || u.email} right={shortDate(u.createdAt)}
+                      <PersonRow key={u.uid} name={u.displayName || u.email} right={shortDate(u.createdAt)} onPress={() => go(`/member/${u.uid}`)}
                         detail={`${u.trainerName ? `Trainer: ${u.trainerName}` : 'No trainer yet'}${u.isArchived ? ' · Deactivated' : ''}`} />
                     ))}
                 </>
@@ -137,7 +137,7 @@ export default function AdminDashboard() {
                       text={`${unassigned.length === 1 ? '1 user has' : `${fmt(unassigned.length)} users have`} no trainer yet.`} />
                   )}
                   {unassigned.slice(0, 5).map((u) => (
-                    <PersonRow key={u.uid} name={u.displayName || u.email} detail={`Joined ${shortDate(u.createdAt)}`}
+                    <PersonRow key={u.uid} name={u.displayName || u.email} onPress={() => go(`/member/${u.uid}`)} detail={`Joined ${shortDate(u.createdAt)}`}
                       right={<Ionicons name="chevron-forward" size={18} color={p.textSecondary} />} />
                   ))}
                   <Muted>Each user has one trainer at a time; you can reassign whenever needed. You can assign your own trainers.</Muted>

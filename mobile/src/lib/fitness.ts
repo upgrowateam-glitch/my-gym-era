@@ -10,6 +10,8 @@ export type Gender = 'male' | 'female' | 'other' | 'prefer_not_to_say';
 export type Smoking = 'never' | 'quit' | 'current';
 export type Goal = 'lose_weight' | 'build_muscle' | 'get_fitter' | 'endurance' | 'flexibility' | 'stay_healthy';
 export type Experience = 'beginner' | 'intermediate' | 'advanced';
+export type PastTraining = 'gym' | 'home' | 'running' | 'yoga' | 'sports' | 'swimming' | 'none';
+export type TrainingDuration = 'under_6_months' | '6_to_12_months' | '1_to_3_years' | 'over_3_years';
 export type WorkType = 'desk' | 'mixed' | 'physical';
 export type ActivityLevel = 'sedentary' | 'light' | 'moderate' | 'active' | 'very_active';
 export type WorkoutTime = 'early_morning' | 'morning' | 'afternoon' | 'evening' | 'night' | 'flexible';
@@ -22,7 +24,11 @@ export interface FitnessProfile {
   personal: { displayName: string; gender: Gender; dateOfBirth: string; whatsapp: string | null } | null;
   body: { heightCm: number; weightKg: number; targetWeightKg: number | null } | null;
   health: { injuries: string; medicalConditions: string; smoking: Smoking } | null;
-  goals: { mainGoal: Goal; extraGoals: Goal[]; experience: Experience } | null;
+  goals: {
+    mainGoal: Goal; extraGoals: Goal[]; experience: Experience;
+    // Added later: older profiles may not have these yet.
+    pastTraining?: PastTraining[]; trainingDuration?: TrainingDuration | null; experienceNotes?: string;
+  } | null;
   routine: { workType: WorkType; activityLevel: ActivityLevel; workoutDays: number; workoutTime: WorkoutTime } | null;
   food: { dietType: DietType; mealsPerDay: number; waterLitres: number; avoidFoods: string; eatingOut: EatingOut } | null;
   sleep: { bedtime: string; wakeTime: string; sleepHours: number; quality: SleepQuality } | null;
@@ -63,6 +69,23 @@ export const EXPERIENCE: Option<Experience>[] = [
   { value: 'beginner', label: 'Beginner', detail: 'New to training or restarting' },
   { value: 'intermediate', label: 'Intermediate', detail: 'Training regularly for 6+ months' },
   { value: 'advanced', label: 'Advanced', detail: 'Training seriously for years' },
+];
+
+export const PAST_TRAINING: Option<PastTraining>[] = [
+  { value: 'gym', label: 'Gym / weights', icon: 'barbell-outline' },
+  { value: 'home', label: 'Home workouts', icon: 'home-outline' },
+  { value: 'running', label: 'Running / cycling', icon: 'walk-outline' },
+  { value: 'yoga', label: 'Yoga / pilates', icon: 'body-outline' },
+  { value: 'sports', label: 'Sports', icon: 'football-outline' },
+  { value: 'swimming', label: 'Swimming', icon: 'water-outline' },
+  { value: 'none', label: 'None yet', icon: 'remove-circle-outline' },
+];
+
+export const TRAINING_DURATION: Option<TrainingDuration>[] = [
+  { value: 'under_6_months', label: 'Under 6 months' },
+  { value: '6_to_12_months', label: '6–12 months' },
+  { value: '1_to_3_years', label: '1–3 years' },
+  { value: 'over_3_years', label: 'Over 3 years' },
 ];
 
 export const WORK_TYPES: Option<WorkType>[] = [
@@ -120,6 +143,14 @@ export const BMI_INFO: Record<BmiCategory, { label: string; color: string; range
 export const labelOf = <T extends string>(opts: Option<T>[], v: T | null | undefined) =>
   opts.find((o) => o.value === v)?.label ?? '—';
 
+/** "Before: Gym / weights, Yoga / pilates · 6–12 months" (or a note that it is not answered yet). */
+export function pastTrainingText(g: NonNullable<FitnessProfile['goals']>): string {
+  if (!g.pastTraining?.length) return 'Past training: not answered yet';
+  if (g.pastTraining.includes('none')) return 'No previous training';
+  const kinds = g.pastTraining.map((t) => labelOf(PAST_TRAINING, t)).join(', ');
+  return `Before: ${kinds}${g.trainingDuration ? ` · ${labelOf(TRAINING_DURATION, g.trainingDuration).toLowerCase()}` : ''}`;
+}
+
 /** Same formula as the server (kg / m²), for the live preview. */
 export function bmiFor(heightCm: number, weightKg: number): { value: number; category: BmiCategory } | null {
   if (!(heightCm >= 100 && heightCm <= 250 && weightKg >= 25 && weightKg <= 300)) return null;
@@ -149,6 +180,10 @@ export const getFitness = () =>
 
 export const saveSection = <S extends Section>(section: S, data: object) =>
   api.put<{ fitness: FitnessProfile; user?: User }>(`/api/users/me/fitness-profile/${section}`, { data });
+
+/** Staff: one User's profile (the server checks who may see it). */
+export const getFitnessOf = (uid: string) =>
+  api.get<{ fitness: FitnessProfile; profileCompleted: boolean }>(`/api/users/${uid}/fitness-profile`);
 
 export const completeFitness = () =>
   api.post<{ fitness: FitnessProfile; user: User }>('/api/users/me/fitness-profile/complete');

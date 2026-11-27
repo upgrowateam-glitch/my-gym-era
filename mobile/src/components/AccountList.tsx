@@ -5,6 +5,7 @@
 
 import { useState } from 'react';
 import { Pressable, Text, View } from 'react-native';
+import { router } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '@/lib/auth';
 import { api, ApiError } from '@/lib/api';
@@ -124,9 +125,21 @@ export function AccountList({ p, roles, canToggle, canEditAccess, canAssignTrain
                 <View style={{ flexDirection: 'row', gap: 6, marginTop: 2, flexWrap: 'wrap' }}>
                   {roles.length > 1 && <Badge label={ROLE_LABELS[u.role]} tone="pending" />}
                   <Badge label={u.isArchived ? 'Inactive' : 'Active'} tone={u.isArchived ? 'inactive' : 'active'} />
+                  {u.role === 'client' && (
+                    <Badge label={u.profileCompleted ? 'Profile done' : 'Profile not finished'}
+                      tone={u.profileCompleted ? 'active' : 'pending'} />
+                  )}
                 </View>
               </View>
             </View>
+            {u.role === 'client' && (
+              <Pressable onPress={() => router.push(`/member/${u.uid}`)} accessibilityRole="button"
+                style={{ flexDirection: 'row', alignItems: 'center', gap: 6, paddingVertical: 4 }}>
+                <Ionicons name="clipboard-outline" size={16} color={p.accent} />
+                <Text style={{ color: p.accent, fontWeight: '700', flex: 1 }}>View fitness profile</Text>
+                <Ionicons name="chevron-forward" size={18} color={p.accent} />
+              </Pressable>
+            )}
             {canAssignTrainer && u.role === 'client' && (
               <TrainerAssign p={p} user={u} trainers={trainers.data} open={assignOpenId === u.uid}
                 busy={busyId === u.uid}

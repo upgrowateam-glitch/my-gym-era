@@ -153,16 +153,19 @@ export function Bars({ data }: { data: { month: string; count: number }[] }) {
 }
 
 /** A person (avatar, name, detail line, something on the right). */
-export function PersonRow({ name, detail, right }: { name: string; detail: string; right?: ReactNode }) {
+export function PersonRow({ name, detail, right, onPress }: {
+  name: string; detail: string; right?: ReactNode; onPress?: () => void;
+}) {
+  const Row = onPress ? Pressable : View;
   return (
-    <View style={styles.row}>
+    <Row style={styles.row} {...(onPress ? { onPress, accessibilityRole: 'button' as const } : {})}>
       <Avatar p={p} name={name} size={34} />
       <View style={{ flex: 1, minWidth: 0 }}>
         <Text style={styles.rowTitle} numberOfLines={1}>{name}</Text>
         <Text style={styles.rowSub} numberOfLines={1}>{detail}</Text>
       </View>
       {typeof right === 'string' ? <Text style={styles.rowSub}>{right}</Text> : right}
-    </View>
+    </Row>
   );
 }
 

@@ -68,7 +68,7 @@ export default function SuperAdminDashboard() {
                   <SubHead>Newest users</SubHead>
                   {d.users.recent.length === 0 ? <Muted>No users yet. Users sign up in the app.</Muted>
                     : d.users.recent.map((r) => (
-                      <PersonRow key={r.uid} name={r.displayName || r.email} right={shortDate(r.createdAt)}
+                      <PersonRow key={r.uid} name={r.displayName || r.email} right={shortDate(r.createdAt)} onPress={() => go(`/member/${r.uid}`)}
                         detail={`${r.trainerName ? `Trainer: ${r.trainerName}` : 'No trainer yet'}${r.isArchived ? ' · Deactivated' : ''}`} />
                     ))}
                 </>

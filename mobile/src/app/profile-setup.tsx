@@ -2,7 +2,9 @@
 // Welcome → Personal → Height & weight → BMI → Health → Goals → Daily routine
 // → Food habits → Sleep → Review & finish.
 // Each step is saved to the server when the person taps Continue, so they can
-// leave ("Skip for now") and later carry on where they stopped.
+// stop and later carry on where they stopped. A new User must finish this
+// before using the app (they can only log out); afterwards it is their
+// profile page, where they can review and edit every answer.
 
 import { useEffect, useRef, useState, type ReactNode } from 'react';
 import {
@@ -15,9 +17,10 @@ import { useAuth } from '@/lib/auth';
 import { ApiError } from '@/lib/api';
 import { useFitZoneFonts } from '@/lib/fonts';
 import {
-  ACTIVITY_LEVELS, BMI_INFO, DIET_TYPES, EATING_OUT, EXPERIENCE, GENDERS, GOALS, SLEEP_QUALITY, SMOKING,
-  WORK_TYPES, WORKOUT_TIMES, ageFrom, bmiFor, completeFitness, getFitness, labelOf, saveSection, sleepHoursFor,
-  type ActivityLevel, type DietType, type EatingOut, type Experience, type FitnessProfile, type Gender, type Goal,
+  ACTIVITY_LEVELS, BMI_INFO, DIET_TYPES, EATING_OUT, EXPERIENCE, GENDERS, GOALS, PAST_TRAINING, SLEEP_QUALITY, SMOKING,
+  TRAINING_DURATION,
+  WORK_TYPES, WORKOUT_TIMES, ageFrom, bmiFor, completeFitness, getFitness, labelOf, pastTrainingText, saveSection, sleepHoursFor,
+  type ActivityLevel, type DietType, type PastTraining, type TrainingDuration, type EatingOut, type Experience, type FitnessProfile, type Gender, type Goal,
   type Section, type SleepQuality, type Smoking, type WorkoutTime, type WorkType,
 } from '@/lib/fitness';
 import { RequireRole } from '@/components/RequireRole';
@@ -38,6 +41,7 @@ interface Form {
   height: string; weight: string; target: string;
   injuries: string; medical: string; smoking: Smoking | null;
   mainGoal: Goal | null; extraGoals: Goal[]; experience: Experience | null;
+  pastTraining: PastTraining[]; duration: TrainingDuration | null; expNotes: string;
   workType: WorkType | null; activity: ActivityLevel | null; workoutDays: number; workoutTime: WorkoutTime | null;
   diet: DietType | null; meals: number; water: number; avoid: string; eatingOut: EatingOut | null;
   bedtime: string; wakeTime: string; quality: SleepQuality | null;
@@ -53,6 +57,8 @@ function formFrom(f: FitnessProfile | null, name: string, whatsapp: string | nul
     height: numText(f?.body?.heightCm), weight: numText(f?.body?.weightKg), target: numText(f?.body?.targetWeightKg),
     injuries: f?.health?.injuries ?? '', medical: f?.health?.medicalConditions ?? '', smoking: f?.health?.smoking ?? null,
     mainGoal: f?.goals?.mainGoal ?? null, extraGoals: f?.goals?.extraGoals ?? [], experience: f?.goals?.experience ?? null,
+    pastTraining: f?.goals?.pastTraining ?? [], duration: f?.goals?.trainingDuration ?? null,
+    expNotes: f?.goals?.experienceNotes ?? '',
     workType: f?.routine?.workType ?? null, activity: f?.routine?.activityLevel ?? null,
     workoutDays: f?.routine?.workoutDays ?? 3, workoutTime: f?.routine?.workoutTime ?? null,
     diet: f?.food?.dietType ?? null, meals: f?.food?.mealsPerDay ?? 3, water: f?.food?.waterLitres ?? 2.5,
@@ -89,7 +95,15 @@ function prepare(step: Section, f: Form): [string | null, object] {
     case 'goals':
       if (!f.mainGoal) return ['Please choose your main goal.', {}];
       if (!f.experience) return ['Please choose your experience level.', {}];
-      return [null, { mainGoal: f.mainGoal, extraGoals: f.extraGoals.filter((g) => g !== f.mainGoal), experience: f.experience }];
+      if (f.pastTraining.length === 0) return ['Please choose the training you have done before (or "None yet").', {}];
+      {
+        const none = f.pastTraining.includes('none');
+        if (!none && !f.duration) return ['Please choose how long you have been training.', {}];
+        return [null, {
+          mainGoal: f.mainGoal, extraGoals: f.extraGoals.filter((g) => g !== f.mainGoal), experience: f.experience,
+          pastTraining: f.pastTraining, trainingDuration: none ? null : f.duration, experienceNotes: f.expNotes.trim(),
+        }];
+      }
     case 'routine':
       if (!f.workType) return ['Please choose your type of work.', {}];
       if (!f.activity) return ['Please choose your activity level.', {}];
@@ -116,7 +130,7 @@ export default function ProfileSetupRoute() {
 
 function ProfileSetup() {
   useFitZoneFonts();
-  const { user, setUser } = useAuth();
+  const { user, setUser, logout } = useAuth();
   const [fitness, setFitness] = useState<FitnessProfile | null>(null);
   const [form, setForm] = useState<Form | null>(null);
   const [step, setStep] = useState<Step>('welcome');
@@ -211,7 +225,9 @@ function ProfileSetup() {
         <View style={{ padding: 20, gap: 14 }}>
           <Message text={loadError} />
           <PrimaryButton label="Try again" icon="refresh" onPress={load} />
-          <Text style={st.link} onPress={() => router.replace('/home')}>Go to Home</Text>
+          {user?.profileCompleted
+            ? <Text style={st.link} onPress={() => router.replace('/home')}>Go to Home</Text>
+            : <Text style={st.link} onPress={() => void logout()}>Log out</Text>}
         </View>
       </Shell>
     );
@@ -249,8 +265,9 @@ function ProfileSetup() {
         </View>
         <View style={{ width: 96, alignItems: 'flex-end' }}>
           {step !== 'done' && (
-            <Pressable onPress={() => router.replace('/home')} hitSlop={10} accessibilityRole="button">
-              <Text style={st.skip} numberOfLines={1}>{fitness.completedAt ? 'Close' : 'Skip for now'}</Text>
+            <Pressable onPress={() => (user?.profileCompleted ? router.replace('/home') : void logout())}
+              hitSlop={10} accessibilityRole="button">
+              <Text style={st.skip} numberOfLines={1}>{user?.profileCompleted ? 'Close' : 'Log out'}</Text>
             </Pressable>
           )}
         </View>
@@ -296,7 +313,7 @@ function ProfileSetup() {
             </StepBody>
           )}
           {step === 'goals' && (
-            <StepBody title="Your fitness" highlight="goals" subtitle="What do you want to achieve?">
+            <StepBody title="Goals &" highlight="experience" subtitle="What do you want to achieve, and what have you done before?">
               <Label>Main goal</Label>
               <OptionCards options={GOALS} value={form.mainGoal}
                 onChange={(v) => setForm((f) => (f ? { ...f, mainGoal: v, extraGoals: f.extraGoals.filter((g) => g !== v) } : f))} />
@@ -305,6 +322,22 @@ function ProfileSetup() {
                 values={form.extraGoals} onChange={(v) => set('extraGoals', v)} max={5} />
               <Label>Experience level</Label>
               <OptionCards options={EXPERIENCE} value={form.experience} onChange={(v) => set('experience', v)} />
+              <Label hint="Choose all that apply.">Training you have done before</Label>
+              <MultiOptionCards options={PAST_TRAINING} values={form.pastTraining} columns={2}
+                onChange={(v) => {
+                  // "None yet" cannot be combined with anything else.
+                  const added = v.find((x) => !form.pastTraining.includes(x));
+                  set('pastTraining', added === 'none' ? ['none'] : v.filter((x) => x !== 'none'));
+                }} />
+              {form.pastTraining.length > 0 && !form.pastTraining.includes('none') && (
+                <>
+                  <Label>For how long?</Label>
+                  <Pills options={TRAINING_DURATION} value={form.duration} onChange={(v) => set('duration', v)} />
+                </>
+              )}
+              <Label hint="Optional — e.g. a past coach, a sport you played, a break from training.">Anything else about your experience?</Label>
+              <FZInput icon="create-outline" placeholder="e.g. Gym for a year in college, stopped in 2023" multiline
+                value={form.expNotes} onChangeText={(t) => set('expNotes', t)} maxLength={300} />
             </StepBody>
           )}
           {step === 'routine' && (
@@ -396,7 +429,7 @@ function WelcomeStep() {
     ['person-outline', 'About you'],
     ['resize-outline', 'Height, weight & BMI'],
     ['medkit-outline', 'Health'],
-    ['trophy-outline', 'Fitness goals'],
+    ['trophy-outline', 'Goals & workout experience'],
     ['time-outline', 'Daily routine'],
     ['restaurant-outline', 'Food habits'],
     ['moon-outline', 'Sleep schedule'],
@@ -422,7 +455,7 @@ function WelcomeStep() {
           </View>
         ))}
       </View>
-      <Text style={st.note}>You can skip now and finish later from Home. Your answers are saved after each step.</Text>
+      <Text style={st.note}>Please answer every step to start using FitZone. Your answers are saved after each step, so you can carry on later.</Text>
     </View>
   );
 }
@@ -533,10 +566,12 @@ function ReviewStep({ fitness: f, onEdit }: { fitness: FitnessProfile; onEdit: (
     { step: 'health', title: 'Health', icon: 'medkit-outline', lines: f.health ? [
       `Injuries: ${f.health.injuries || 'none'}`, `Medical: ${f.health.medicalConditions || 'none'}`, labelOf(SMOKING, f.health.smoking),
     ] : [] },
-    { step: 'goals', title: 'Fitness goals', icon: 'trophy-outline', lines: f.goals ? [
+    { step: 'goals', title: 'Goals & experience', icon: 'trophy-outline', lines: f.goals ? [
       `Main: ${labelOf(GOALS, f.goals.mainGoal)}`,
       f.goals.extraGoals.length ? `Also: ${f.goals.extraGoals.map((g) => labelOf(GOALS, g)).join(', ')}` : '',
       labelOf(EXPERIENCE, f.goals.experience),
+      pastTrainingText(f.goals),
+      f.goals.experienceNotes ? `Note: ${f.goals.experienceNotes}` : '',
     ] : [] },
     { step: 'routine', title: 'Daily routine', icon: 'time-outline', lines: f.routine ? [
       `${labelOf(WORK_TYPES, f.routine.workType)} · ${labelOf(ACTIVITY_LEVELS, f.routine.activityLevel)}`,

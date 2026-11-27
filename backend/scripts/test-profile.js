@@ -47,7 +47,8 @@ const GOOD = {
   personal: { displayName: 'Priya P', gender: 'female', dateOfBirth: yearsAgo(28), whatsapp: '+91 98765 43210' },
   body: { heightCm: 165, weightKg: 68, targetWeightKg: 60 },
   health: { injuries: 'Old knee injury', medicalConditions: '', smoking: 'never' },
-  goals: { mainGoal: 'lose_weight', extraGoals: ['get_fitter', 'lose_weight', 'flexibility'], experience: 'beginner' },
+  goals: { mainGoal: 'lose_weight', extraGoals: ['get_fitter', 'lose_weight', 'flexibility'], experience: 'beginner',
+    pastTraining: ['gym', 'yoga', 'gym'], trainingDuration: '6_to_12_months', experienceNotes: 'Gym in college' },
   routine: { workType: 'desk', activityLevel: 'light', workoutDays: 4, workoutTime: 'morning' },
   food: { dietType: 'eggetarian', mealsPerDay: 4, waterLitres: 2.5, avoidFoods: 'Peanuts', eatingOut: 'weekly' },
   sleep: { bedtime: '23:30', wakeTime: '06:30', quality: 'good' },
@@ -104,7 +105,14 @@ async function run() {
   console.log('Fitness goals');
   check('unknown goal refused', (await save(user.token, 'goals', { ...GOOD.goals, mainGoal: 'fly' })).status === 400);
   check('unknown extra goal refused', (await save(user.token, 'goals', { ...GOOD.goals, extraGoals: ['fly'] })).status === 400);
+  check('past training required', (await save(user.token, 'goals', { ...GOOD.goals, pastTraining: [] })).status === 400);
+  check('unknown past training refused', (await save(user.token, 'goals', { ...GOOD.goals, pastTraining: ['skydiving'] })).status === 400);
+  check('"none" mixed with others refused', (await save(user.token, 'goals', { ...GOOD.goals, pastTraining: ['none', 'gym'] })).status === 400);
+  check('training duration required', (await save(user.token, 'goals', { ...GOOD.goals, trainingDuration: undefined })).status === 400);
+  const noneBefore = await save(user.token, 'goals', { ...GOOD.goals, pastTraining: ['none'], trainingDuration: 'over_3_years' });
+  check('"none" saved without a duration', noneBefore.status === 200 && noneBefore.data.fitness.goals.trainingDuration === null, noneBefore);
   const goals = await save(user.token, 'goals', GOOD.goals);
+  check('past training saved (no duplicates)', JSON.stringify(goals.data?.fitness.goals.pastTraining) === '["gym","yoga"]' && goals.data.fitness.goals.trainingDuration === '6_to_12_months', goals.data?.fitness.goals);
   check('main goal removed from extra goals', JSON.stringify(goals.data?.fitness.goals.extraGoals) === '["get_fitter","flexibility"]', goals.data?.fitness.goals);
 
   console.log('Daily routine');

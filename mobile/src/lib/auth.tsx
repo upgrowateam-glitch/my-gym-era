@@ -107,12 +107,13 @@ export function useAuth(): AuthState {
 }
 
 /** The dashboard for each role. */
-export function homeRouteFor(user: User): '/super-admin' | '/admin' | '/trainer' | '/home' {
+/** Where a signed-in person starts. A User who has not finished the fitness profile goes to that form first. */
+export function homeRouteFor(user: User): '/super-admin' | '/admin' | '/trainer' | '/home' | '/profile-setup' {
   switch (user.role) {
     case 'super_admin': return '/super-admin';
     case 'admin': return '/admin';
     case 'trainer': return '/trainer';
-    default: return '/home';
+    default: return user.profileCompleted ? '/home' : '/profile-setup';
   }
 }
 

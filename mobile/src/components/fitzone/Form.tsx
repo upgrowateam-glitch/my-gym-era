@@ -55,15 +55,15 @@ export function OptionCards<T extends string>({ options, value, onChange, column
 }
 
 /** Big tappable cards (several choices). */
-export function MultiOptionCards<T extends string>({ options, values, onChange, max }: {
-  options: Option<T>[]; values: T[]; onChange: (v: T[]) => void; max?: number;
+export function MultiOptionCards<T extends string>({ options, values, onChange, max, columns = 1 }: {
+  options: Option<T>[]; values: T[]; onChange: (v: T[]) => void; max?: number; columns?: 1 | 2;
 }) {
   return (
-    <View style={s.cards}>
+    <View style={[s.cards, columns === 2 && { flexDirection: 'row', flexWrap: 'wrap' }]}>
       {options.map((o) => {
         const sel = values.includes(o.value);
         return (
-          <ChoiceCard key={o.value} option={o} selected={sel} multi
+          <ChoiceCard key={o.value} option={o} selected={sel} multi half={columns === 2}
             onPress={() => onChange(sel ? values.filter((x) => x !== o.value) : max && values.length >= max ? values : [...values, o.value])} />
         );
       })}
