@@ -48,7 +48,9 @@ export default function SignupScreen() {
     setError(null);
     try {
       await register(name.trim(), email.trim(), password);
-      router.replace('/profile-setup'); // new Users go on to the fitness profile (they may skip it)
+      // Account created: sign in on the login page (email filled in); the fitness
+      // profile form then opens after that first sign-in.
+      router.replace({ pathname: '/login', params: { email: email.trim(), created: '1' } });
     } catch (e) {
       setError(e instanceof ApiError ? e.message : 'Something went wrong. Please try again.');
     } finally {

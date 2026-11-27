@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, Text, View, useWindowDimensions } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { Redirect, router } from 'expo-router';
+import { Redirect, router, useLocalSearchParams } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { homeRouteFor, useAuth } from '@/lib/auth';
 import { ApiError } from '@/lib/api';
@@ -20,7 +20,10 @@ export default function LoginScreen() {
   useFitZoneFonts();
   const { user, login, notice } = useAuth();
   const { width: screenW, height: screenH } = useWindowDimensions();
-  const [email, setEmail] = useState('');
+  // Coming from sign-up: /login?email=...&created=1
+  const params = useLocalSearchParams<{ email?: string; created?: string }>();
+  const justCreated = params.created === '1';
+  const [email, setEmail] = useState(typeof params.email === 'string' ? params.email : '');
   const [password, setPassword] = useState('');
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -42,7 +45,8 @@ export default function LoginScreen() {
     setError(null);
     try {
       await login(email.trim(), password);
-      router.replace('/');
+      // First sign-in of a new account: the fitness profile form (welcome form).
+      router.replace(justCreated ? '/profile-setup' : '/');
     } catch (e) {
       setError(e instanceof ApiError ? e.message : 'Something went wrong. Please try again.');
     } finally {
@@ -66,6 +70,7 @@ export default function LoginScreen() {
                 <View style={{ height: photoSpace }} />
                 <PhotoHeading title="Welcome Back" caption="Sign in to continue" />
 
+                {justCreated && !error && <Message text="Account created. Please sign in with your new password." kind="info" />}
                 {notice && !error && <Message text={notice} kind="info" />}
                 {error && <Message text={error} />}
                 {info && <Message text={info} kind="info" />}

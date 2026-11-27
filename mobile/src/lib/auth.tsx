@@ -16,6 +16,7 @@ interface AuthState {
   /** message to show on the login page (e.g. session ended, server unreachable) */
   notice: string | null;
   login(email: string, password: string): Promise<void>;
+  /** Creates a User account. Does NOT sign in: the person then signs in on the login page. */
   register(name: string, email: string, password: string): Promise<void>;
   /** Accepts an invitation link and signs in with the new account. */
   acceptInvitation(token: string, body: { name: string; email?: string; password: string }): Promise<void>;
@@ -80,7 +81,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       await startSession(await api.post<Session>('/api/auth/login', { email, password }));
     },
     async register(name, email, password) {
-      await startSession(await api.post<Session>('/api/auth/register', { displayName: name, email, password }));
+      await api.post<Session>('/api/auth/register', { displayName: name, email, password }); // no automatic sign-in
     },
     async acceptInvitation(token, body) {
       await startSession(await api.post<Session>(`/api/invitations/token/${encodeURIComponent(token)}/accept`, body));
