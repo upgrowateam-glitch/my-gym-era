@@ -1,4 +1,5 @@
-// Shown on the sign-in page when an account is deactivated: the person picks
+// Shown on the sign-in page when an account is deactivated. First only a
+// "Message admin on WhatsApp" link; tapping it opens the box where the person picks
 // what they need, can add a few words, and sends it to the gym's support
 // WhatsApp (the number the Super Admin sets in Settings → Support WhatsApp).
 // The message starts with "Hi, I am <name>" so the gym knows who it is.
@@ -23,10 +24,21 @@ const REASONS = [
 const WHATSAPP_GREEN = '#25D366';
 
 export function SupportContact({ details }: { details: SupportDetails }) {
+  const [open, setOpen] = useState(false);
   const [reason, setReason] = useState<string | null>(null);
   const [note, setNote] = useState('');
   const [error, setError] = useState<string | null>(null);
   const who = details.name?.trim() || details.email;
+
+  if (!open) {
+    return (
+      <Pressable onPress={() => setOpen(true)} hitSlop={8} accessibilityRole="button" style={st.link}>
+        <Ionicons name="logo-whatsapp" size={16} color={GOLD.main} />
+        <Text style={st.linkText}>Message admin on WhatsApp</Text>
+        <Ionicons name="chevron-forward" size={15} color={GOLD.main} />
+      </Pressable>
+    );
+  }
 
   if (!details.supportWhatsapp) {
     return (
@@ -61,6 +73,9 @@ export function SupportContact({ details }: { details: SupportDetails }) {
       <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
         <Ionicons name="logo-whatsapp" size={20} color={WHATSAPP_GREEN} />
         <Text style={st.title}>Report to the gym admin</Text>
+        <Pressable onPress={() => setOpen(false)} hitSlop={10} accessibilityLabel="Close">
+          <Ionicons name="close" size={20} color={c.muted} />
+        </Pressable>
       </View>
       <Text style={st.text}>
         Your message will start with <Text style={{ color: c.text, fontFamily: font.semibold }}>&quot;Hi, I am {who}&quot;</Text>.
@@ -99,7 +114,9 @@ const st = StyleSheet.create({
     gap: 12, padding: 16, borderRadius: 20, borderWidth: 1, borderColor: `rgba(${GOLD.rgb},0.35)`,
     backgroundColor: 'rgba(17,21,24,0.92)',
   },
-  title: { color: c.text, fontFamily: font.bold, fontSize: 16 },
+  title: { color: c.text, fontFamily: font.bold, fontSize: 16, flex: 1 },
+  link: { flexDirection: 'row', alignItems: 'center', justifyContent: 'flex-end', gap: 6, alignSelf: 'flex-end', marginTop: -4 },
+  linkText: { color: GOLD.main, fontFamily: font.semibold, fontSize: 14 },
   text: { color: c.textSecondary, fontFamily: font.regular, fontSize: 14, lineHeight: 20 },
   option: {
     flexDirection: 'row', alignItems: 'center', gap: 10, paddingVertical: 11, paddingHorizontal: 12, borderRadius: 14,
