@@ -24,6 +24,7 @@ import {
   type Section, type SleepQuality, type Smoking, type WorkoutTime, type WorkType,
 } from '@/lib/fitness';
 import { RequireRole } from '@/components/RequireRole';
+import { FZPhoneInput } from '@/components/PhoneInput';
 import { AuthBackdrop, Message, PrimaryButton } from '@/components/auth/AuthUI';
 import { FitZoneLogo, Glow } from '@/components/fitzone/Brand';
 import {
@@ -296,8 +297,7 @@ function ProfileSetup() {
               <DateInput day={form.day} month={form.month} year={form.year}
                 onChange={(p) => setForm((f) => (f ? { ...f, ...p } : f))} />
               <Label hint="Optional — your trainer can contact you on WhatsApp.">Phone / WhatsApp</Label>
-              <FZInput icon="logo-whatsapp" placeholder="+91 98765 43210" keyboardType="phone-pad" value={form.whatsapp}
-                onChangeText={(t) => set('whatsapp', t)} />
+              <FZPhoneInput value={form.whatsapp} onChangeText={(t) => set('whatsapp', t)} />
             </StepBody>
           )}
           {step === 'body' && <BodyStep form={form} set={set} />}

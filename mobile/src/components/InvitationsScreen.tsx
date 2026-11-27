@@ -17,6 +17,7 @@ import {
 import {
   Badge, Button, Card, Chips, Empty, Field, Notice, Page, SectionTitle, ToggleRow, type Palette,
 } from './ui/UI';
+import { PhoneField } from './PhoneInput';
 
 const EXPIRY = [1, 3, 7, 14] as const;
 type Filter = 'all' | 'pending' | 'used' | 'expired' | 'revoked';
@@ -155,8 +156,7 @@ function InviteForm({ p, allowAdmin, onCreated, onCancel }: {
       <Field p={p} label="Name" icon="person-outline" value={name} onChangeText={setName} autoCapitalize="words" />
       <Field p={p} label="Email (optional — the account must use it)" icon="mail-outline" value={email}
         onChangeText={setEmail} keyboardType="email-address" autoCapitalize="none" />
-      <Field p={p} label="WhatsApp number (optional)" icon="logo-whatsapp" value={whatsapp}
-        onChangeText={setWhatsapp} keyboardType="phone-pad" placeholder="e.g. +91 98765 43210" />
+      <PhoneField p={p} label="WhatsApp number (optional)" value={whatsapp} onChangeText={setWhatsapp} />
       {role === 'admin' && (
         <View style={{ gap: 4 }}>
           <Text style={{ color: p.textSecondary, fontSize: 12.5, fontWeight: '700' }}>Access</Text>

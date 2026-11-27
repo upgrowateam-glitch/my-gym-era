@@ -8,6 +8,7 @@ import { api, ApiError } from '@/lib/api';
 import { ROLE_LABELS, type User } from '@/lib/types';
 import { confirm } from '@/lib/confirm';
 import { Avatar, Badge, Button, Card, Field, Notice, Page, SectionTitle, type Palette } from './ui/UI';
+import { PhoneField } from './PhoneInput';
 
 export function ProfileScreen({ p, kicker }: { p: Palette; kicker: string }) {
   const { user, setUser, logout } = useAuth();
@@ -73,8 +74,7 @@ export function ProfileScreen({ p, kicker }: { p: Palette; kicker: string }) {
       <Card p={p}>
         {msg && <Notice text={msg.text} kind={msg.kind} />}
         <Field p={p} label="Full name" icon="person-outline" value={name} onChangeText={setName} autoCapitalize="words" />
-        <Field p={p} label="WhatsApp number" icon="logo-whatsapp" value={whatsapp} onChangeText={setWhatsapp}
-          keyboardType="phone-pad" placeholder="e.g. +91 98765 43210" />
+        <PhoneField p={p} label="WhatsApp number" value={whatsapp} onChangeText={setWhatsapp} />
         <Field p={p} label="Email (cannot be changed)" icon="mail-outline" value={user.email} editable={false} />
         <Button p={p} label="Save changes" icon="save-outline" onPress={saveProfile} loading={saving} />
       </Card>

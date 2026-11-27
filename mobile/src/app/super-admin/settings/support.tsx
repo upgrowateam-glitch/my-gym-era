@@ -7,7 +7,8 @@ import { Text, View } from 'react-native';
 import { router } from 'expo-router';
 import { api, ApiError } from '@/lib/api';
 import { useApi } from '@/lib/useApi';
-import { Button, Card, Field, Notice, Page } from '@/components/ui/UI';
+import { Button, Card, Notice, Page } from '@/components/ui/UI';
+import { PhoneField } from '@/components/PhoneInput';
 import { SUPER as p } from '@/theme/palettes';
 
 interface Settings { supportWhatsapp: string | null }
@@ -53,8 +54,7 @@ function SupportForm({ initial }: { initial: Settings }) {
         and tap <Text style={{ color: p.text, fontWeight: '700' }}>Share on WhatsApp</Text>. The message goes to this number
         and starts with &quot;Hi, I am &lt;their name&gt;&quot;.
       </Text>
-      <Field p={p} label="WhatsApp number (with country code)" icon="logo-whatsapp" placeholder="+91 98765 43210"
-        keyboardType="phone-pad" value={number} onChangeText={setNumber} error={error} />
+      <PhoneField p={p} label="WhatsApp number" value={number} onChangeText={setNumber} error={error} />
       {done && <Notice kind="success" text={done} />}
       <View style={{ flexDirection: 'row', gap: 10, flexWrap: 'wrap' }}>
         <Button p={p} label="Save" icon="checkmark" loading={busy} onPress={() => save(number)} />
