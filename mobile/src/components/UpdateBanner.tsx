@@ -15,6 +15,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import * as Updates from 'expo-updates';
 import { fitzone as c, font } from '@/theme/colors';
+import { GOLD } from '@/components/auth/AuthUI';
 
 const UPDATES_ACTIVE = Platform.OS !== 'web' && !__DEV__ && Updates.isEnabled;
 
@@ -40,7 +41,7 @@ function Banner() {
   return (
     <SafeAreaView edges={['bottom']} style={styles.wrap} pointerEvents="box-none">
       <View style={styles.card}>
-        <Ionicons name="cloud-download-outline" size={22} color={c.mint} />
+        <Ionicons name="cloud-download-outline" size={22} color={GOLD.main} />
         <Text style={styles.text}>
           {failed ? 'Close and reopen the app to use the new version.' : 'A new version of FitZone is ready.'}
         </Text>
@@ -62,10 +63,10 @@ const styles = StyleSheet.create({
   wrap: { position: 'absolute', bottom: 0, left: 0, right: 0, paddingHorizontal: 12, paddingBottom: 72 },
   card: {
     flexDirection: 'row', alignItems: 'center', gap: 10,
-    backgroundColor: c.elevated, borderColor: c.mint + '66', borderWidth: 1, borderRadius: 16,
+    backgroundColor: '#1E1F23', borderColor: 'rgba(201,166,107,0.55)', borderWidth: 1, borderRadius: 16,
     paddingVertical: 12, paddingHorizontal: 14,
   },
   text: { flex: 1, color: c.text, fontFamily: font.medium, fontSize: 14 },
-  button: { backgroundColor: c.mint, borderRadius: 10, paddingVertical: 8, paddingHorizontal: 12 },
-  buttonText: { color: c.onMint, fontFamily: font.semibold, fontSize: 13.5 },
+  button: { backgroundColor: GOLD.main, borderRadius: 10, paddingVertical: 8, paddingHorizontal: 12 },
+  buttonText: { color: GOLD.on, fontFamily: font.semibold, fontSize: 13.5 },
 });
