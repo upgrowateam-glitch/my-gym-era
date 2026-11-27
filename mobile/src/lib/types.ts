@@ -55,6 +55,23 @@ export interface AdminStats {
   pendingInvitations: number;
 }
 
+/** GET /api/admin/overview — everything the Super Admin dashboard shows. */
+export interface SuperOverview {
+  totals: {
+    admins: number; trainers: number; users: number;
+    newThisMonth: { admins: number; trainers: number; users: number };
+  };
+  users: {
+    active: number; inactive: number; unassigned: number; profilesCompleted: number;
+    /** last 6 months, oldest first; month = 'YYYY-MM' */
+    signupsByMonth: { month: string; count: number }[];
+    recent: User[];
+  };
+  invitations: { pending: number; used: number; expired: number; revoked: number; latest: Invitation[] };
+  trainers: TrainerSummary[];
+  library: { exercises: number; videos: number; folders: number };
+}
+
 export interface TrainerSummary extends User {
   managerName: string | null;
   clientCount: number;

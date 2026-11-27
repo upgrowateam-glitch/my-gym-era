@@ -37,14 +37,14 @@ const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const hashToken = (token) => createHash('sha256').update(token).digest('hex');
 const newToken = () => randomBytes(32).toString('base64url');
 
-function statusOf(row) {
+export function statusOf(row) {
   if (row.used_at) return 'used';
   if (row.revoked_at) return 'revoked';
   if (new Date(row.expires_at) <= new Date()) return 'expired';
   return 'pending';
 }
 
-const toInvitation = (r) => ({
+export const toInvitation = (r) => ({
   id: r.id,
   role: r.role,
   name: r.name,
@@ -62,7 +62,7 @@ const toInvitation = (r) => ({
   status: statusOf(r),
 });
 
-const SELECT_INVITATION = `
+export const SELECT_INVITATION = `
   SELECT i.*,
          (SELECT u.display_name FROM users u WHERE u.id = i.invited_by) AS invited_by_name,
          (SELECT u.display_name FROM users u WHERE u.id = i.used_by) AS used_by_name

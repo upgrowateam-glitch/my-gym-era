@@ -1,6 +1,6 @@
 import { InvitationsScreen } from '@/components/InvitationsScreen';
-import { ADMIN } from '@/theme/palettes';
+import { SUPER } from '@/theme/palettes';
 
 export default function SuperAdminInvitations() {
-  return <InvitationsScreen p={ADMIN} kicker="SUPER ADMIN" />;
+  return <InvitationsScreen p={SUPER} kicker="SUPER SUPER" />;
 }

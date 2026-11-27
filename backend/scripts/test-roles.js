@@ -219,6 +219,29 @@ async function run() {
   const stats = await api('GET', '/api/admin/stats', { token: sa.token });
   check('dashboard counts include pending invitations', stats.status === 200 && stats.data.pendingInvitations >= 1, stats.data);
 
+  // ── Super Admin dashboard ─────────────────────────────────────────────────
+  console.log('Super Admin dashboard');
+  const ov = await api('GET', '/api/admin/overview', { token: sa.token });
+  check('Super Admin gets the dashboard overview', ov.status === 200 && ov.data.totals?.admins >= 1
+    && ov.data.totals.trainers >= 1 && ov.data.totals.users >= 1, ov.status);
+  check('…with this month\'s new accounts', ov.data?.totals?.newThisMonth?.users >= 1, ov.data?.totals);
+  check('…invitation counts and the latest invitations', ov.data?.invitations?.used >= 1
+    && ov.data.invitations.revoked >= 1 && Array.isArray(ov.data.invitations.latest) && ov.data.invitations.latest.length <= 5);
+  check('…6 months of sign-ups (this month counted)', ov.data?.users?.signupsByMonth?.length === 6
+    && ov.data.users.signupsByMonth[5].count >= 1, ov.data?.users?.signupsByMonth);
+  check('…newest users, trainers with user counts, library counts',
+    Array.isArray(ov.data?.users?.recent) && ov.data.users.recent.length >= 1
+    && ov.data.trainers?.some((t) => typeof t.clientCount === 'number')
+    && typeof ov.data.library?.exercises === 'number' && typeof ov.data.library?.videos === 'number');
+  check('…no password hashes or link codes anywhere',
+    !/password_hash|token_hash|"\$2[aby]\$/.test(JSON.stringify(ov.data)));
+  check('Admin cannot open the Super Admin dashboard → 403',
+    (await api('GET', '/api/admin/overview', { token: admin.token })).status === 403);
+  check('Trainer cannot open the Super Admin dashboard → 403',
+    (await api('GET', '/api/admin/overview', { token: tom.token })).status === 403);
+  check('User cannot open the Super Admin dashboard → 403',
+    (await api('GET', '/api/admin/overview', { token: user.token })).status === 403);
+
   // ── Who may use which area ────────────────────────────────────────────────
   console.log('Area access');
   check('User cannot use admin endpoints → 403', (await api('GET', '/api/admin/stats', { token: user.token })).status === 403);

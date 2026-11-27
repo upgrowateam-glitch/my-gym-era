@@ -1,18 +1,17 @@
 import { Stack } from 'expo-router';
-import { ADMIN } from '@/theme/palettes';
+import { SUPER } from '@/theme/palettes';
 
 export default function SettingsLayout() {
   return (
     <Stack
       screenOptions={{
-        headerStyle: { backgroundColor: ADMIN.bg },
-        headerTintColor: ADMIN.text,
+        headerStyle: { backgroundColor: SUPER.bg },
+        headerTintColor: SUPER.text,
         headerShadowVisible: false,
-        contentStyle: { backgroundColor: ADMIN.bg },
+        contentStyle: { backgroundColor: SUPER.bg },
       }}
     >
       <Stack.Screen name="index" options={{ headerShown: false }} />
-      <Stack.Screen name="users" options={{ title: 'User Management' }} />
       <Stack.Screen name="profile" options={{ title: 'My Profile', headerShown: false }} />
     </Stack>
   );

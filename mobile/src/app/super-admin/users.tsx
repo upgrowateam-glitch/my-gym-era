@@ -1,12 +1,14 @@
-// Super Admin → Settings → User Management.
+// Super Admin → Users: all accounts (Admins, Trainers, Users) — activate /
+// deactivate, Admin access switches, and trainer assignment for Users.
+// Open a tab directly with /super-admin/users?tab=trainers.
 
 import { useState } from 'react';
-import { ScrollView, View } from 'react-native';
+import { View } from 'react-native';
 import { useLocalSearchParams } from 'expo-router';
 import { AccountList } from '@/components/AccountList';
-import { Chips } from '@/components/ui/UI';
+import { Chips, Page } from '@/components/ui/UI';
 import type { Role } from '@/lib/types';
-import { ADMIN as p } from '@/theme/palettes';
+import { SUPER as p } from '@/theme/palettes';
 
 type Tab = 'admins' | 'trainers' | 'users';
 const ROLES: Record<Tab, Role[]> = { admins: ['super_admin', 'admin'], trainers: ['trainer'], users: ['client'] };
@@ -15,14 +17,22 @@ const EMPTY: Record<Tab, string> = {
   trainers: 'No trainers yet. Invite one from Invitations.',
   users: 'No users yet. Users sign up in the app.',
 };
+const isTab = (x: unknown): x is Tab => typeof x === 'string' && x in ROLES;
 
 export default function UserManagement() {
-  const params = useLocalSearchParams<{ tab?: Tab }>();
-  const [tab, setTab] = useState<Tab>(params.tab && ROLES[params.tab] ? params.tab : 'admins');
+  const params = useLocalSearchParams<{ tab?: string }>();
+  const [tab, setTab] = useState<Tab>(isTab(params.tab) ? params.tab : 'admins');
+
+  // Links from the dashboard (e.g. "Trainers") switch the tab even when this
+  // screen is already open (React's "adjust state when a prop changes" pattern).
+  const [seenParam, setSeenParam] = useState(params.tab);
+  if (params.tab !== seenParam) {
+    setSeenParam(params.tab);
+    if (isTab(params.tab)) setTab(params.tab);
+  }
 
   return (
-    <ScrollView style={{ flex: 1, backgroundColor: p.bg }}
-      contentContainerStyle={{ padding: 18, paddingBottom: 40, gap: 14, width: '100%', maxWidth: 720, alignSelf: 'center' }}>
+    <Page p={p} kicker="SUPER ADMIN" title="Users">
       <Chips p={p} value={tab} onChange={setTab} options={[
         { value: 'admins', label: 'Admins' }, { value: 'trainers', label: 'Trainers' }, { value: 'users', label: 'Users' },
       ]} />
@@ -31,6 +41,6 @@ export default function UserManagement() {
         <AccountList key={tab} p={p} roles={ROLES[tab]} canToggle canEditAccess={tab === 'admins'}
           canAssignTrainer={tab === 'users'} emptyText={EMPTY[tab]} />
       </View>
-    </ScrollView>
+    </Page>
   );
 }

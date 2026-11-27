@@ -9,6 +9,12 @@ export const ADMIN: Palette = {
   text: staff.text, textSecondary: staff.textSecondary, accent: '#A66CFF', onAccent: '#FFFFFF',
 };
 
+/** Super Admin area: dark charcoal with FitZone gold (matches the logo and sign-in pages). */
+export const SUPER: Palette = {
+  bg: '#141518', card: '#1E1F23', elevated: '#26282D', border: '#2F3137',
+  text: '#F4F4F5', textSecondary: '#A1A1AA', accent: '#C9A66B', onAccent: '#17120A',
+};
+
 /** Trainer area: dark navy with cyan accent. */
 export const TRAINER: Palette = {
   bg: staff.bg, card: staff.card, elevated: staff.elevated, border: '#2A3448',

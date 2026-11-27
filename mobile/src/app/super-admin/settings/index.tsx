@@ -6,15 +6,15 @@ import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '@/lib/auth';
 import { confirm } from '@/lib/confirm';
 import { Card, Page, type IconName } from '@/components/ui/UI';
-import { ADMIN as p } from '@/theme/palettes';
+import { SUPER as p } from '@/theme/palettes';
 
 export default function SuperAdminSettings() {
   const { logout } = useAuth();
   return (
-    <Page p={p} kicker="SUPER ADMIN" title="Settings">
+    <Page p={p} kicker="SUPER SUPER" title="Settings">
       <Card p={p} style={{ padding: 6, gap: 0 }}>
         <Item icon="people-circle-outline" title="User Management" detail="Admins, trainers and users · activate, deactivate, access"
-          onPress={() => router.push('/super-admin/settings/users')} />
+          onPress={() => router.push('/super-admin/users')} />
         <Item icon="mail-outline" title="Invitations" detail="Invite Admins and Trainers"
           onPress={() => router.push('/super-admin/invitations')} />
         <Item icon="person-outline" title="My Profile" detail="Name, WhatsApp, password"

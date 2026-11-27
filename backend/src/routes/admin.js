@@ -1,6 +1,7 @@
 // Admin / Super Admin endpoints.
 //
 //   GET /api/admin/stats                    dashboard counts
+//   GET /api/admin/overview                 Super Admin dashboard (Super Admin only)
 //   GET /api/admin/trainers?archived=false  trainers (super admin: all;
 //                                           admin: the trainers they manage)
 //
@@ -11,7 +12,8 @@
 import { Router } from 'express';
 import { query } from '../db.js';
 import { requireAuth, requireRole } from '../middleware/auth.js';
-import { USER_COLUMNS, toPublicUser } from '../users/userModel.js';
+import { USER_COLUMNS, TRAINER_NAME_COLUMN, toPublicUser } from '../users/userModel.js';
+import { SELECT_INVITATION, toInvitation } from './invitations.js';
 import * as v from '../validate.js';
 
 export const adminRouter = Router();
@@ -62,5 +64,72 @@ adminRouter.get('/trainers', async (req, res) => {
      ORDER BY display_name, email`, params);
   res.json({
     trainers: rows.map((r) => ({ ...toPublicUser(r), managerName: r.manager_name, clientCount: r.client_count })),
+  });
+});
+
+// ── Super Admin dashboard ───────────────────────────────────────────────────
+// GET /api/admin/overview   (Super Admin only) everything the dashboard shows,
+// in one request. Only real numbers from the database.
+adminRouter.get('/overview', requireRole('super_admin'), async (_req, res) => {
+  const [counts, invitationCounts, latestInvitations, signups, recentUsers, trainers, library] = await Promise.all([
+    query(`
+      SELECT
+        count(*) FILTER (WHERE role = 'admin' AND NOT is_archived)::int    AS admins,
+        count(*) FILTER (WHERE role = 'trainer' AND NOT is_archived)::int  AS trainers,
+        count(*) FILTER (WHERE role = 'client' AND NOT is_archived)::int   AS users,
+        count(*) FILTER (WHERE role = 'client' AND is_archived)::int       AS inactive_users,
+        count(*) FILTER (WHERE role = 'client' AND NOT is_archived AND trainer_id IS NULL)::int AS unassigned_users,
+        count(*) FILTER (WHERE role = 'client' AND NOT is_archived AND profile_completed)::int  AS profiles_completed,
+        count(*) FILTER (WHERE role = 'admin' AND created_at >= date_trunc('month', now()))::int   AS new_admins,
+        count(*) FILTER (WHERE role = 'trainer' AND created_at >= date_trunc('month', now()))::int AS new_trainers,
+        count(*) FILTER (WHERE role = 'client' AND created_at >= date_trunc('month', now()))::int  AS new_users
+      FROM users`),
+    query(`
+      SELECT
+        count(*) FILTER (WHERE used_at IS NULL AND revoked_at IS NULL AND expires_at > now())::int AS pending,
+        count(*) FILTER (WHERE used_at IS NOT NULL)::int AS used,
+        count(*) FILTER (WHERE used_at IS NULL AND revoked_at IS NULL AND expires_at <= now())::int AS expired,
+        count(*) FILTER (WHERE used_at IS NULL AND revoked_at IS NOT NULL)::int AS revoked
+      FROM invitations`),
+    query(`${SELECT_INVITATION} ORDER BY i.created_at DESC LIMIT 5`),
+    // New Users per month, last 6 months including this one (months without sign-ups = 0).
+    query(`
+      SELECT to_char(m, 'YYYY-MM') AS month,
+             (SELECT count(*)::int FROM users
+               WHERE role = 'client' AND created_at >= m AND created_at < m + interval '1 month') AS count
+      FROM generate_series(date_trunc('month', now()) - interval '5 months', date_trunc('month', now()), interval '1 month') AS m
+      ORDER BY m`),
+    query(`SELECT ${USER_COLUMNS}, ${TRAINER_NAME_COLUMN} FROM users
+           WHERE role = 'client' ORDER BY created_at DESC LIMIT 5`),
+    query(`
+      SELECT ${USER_COLUMNS},
+             (SELECT m.display_name FROM users m WHERE m.id = users.managed_by) AS manager_name,
+             (SELECT count(*)::int FROM users c
+               WHERE c.trainer_id = users.id AND c.role = 'client' AND NOT c.is_archived) AS client_count
+      FROM users WHERE role = 'trainer' AND NOT is_archived
+      ORDER BY client_count DESC, display_name, email`),
+    query(`
+      SELECT (SELECT count(*)::int FROM exercises) AS exercises,
+             (SELECT count(*)::int FROM media_items WHERE type = 'video') AS videos,
+             (SELECT count(*)::int FROM media_items WHERE type = 'folder') AS folders`),
+  ]);
+
+  const c = counts.rows[0];
+  res.json({
+    totals: {
+      admins: c.admins, trainers: c.trainers, users: c.users,
+      newThisMonth: { admins: c.new_admins, trainers: c.new_trainers, users: c.new_users },
+    },
+    users: {
+      active: c.users,
+      inactive: c.inactive_users,
+      unassigned: c.unassigned_users,
+      profilesCompleted: c.profiles_completed,
+      signupsByMonth: signups.rows,
+      recent: recentUsers.rows.map((r) => toPublicUser(r)),
+    },
+    invitations: { ...invitationCounts.rows[0], latest: latestInvitations.rows.map(toInvitation) },
+    trainers: trainers.rows.map((r) => ({ ...toPublicUser(r), managerName: r.manager_name, clientCount: r.client_count })),
+    library: library.rows[0],
   });
 });
