@@ -19,6 +19,7 @@ export default function SuperAdminLayout() {
         <Tabs.Screen name="index" options={{ title: 'Dashboard', tabBarIcon: tabIcon('grid-outline') }} />
         <Tabs.Screen name="invitations" options={{ title: 'Invitations', tabBarIcon: tabIcon('mail-outline') }} />
         <Tabs.Screen name="users" options={{ title: 'Users', tabBarIcon: tabIcon('people-outline') }} />
+        <Tabs.Screen name="library" options={{ title: 'Library', tabBarIcon: tabIcon('film-outline') }} />
         <Tabs.Screen name="settings" options={{ title: 'Settings', tabBarIcon: tabIcon('settings-outline') }} />
       </Tabs>
     </RequireRole>

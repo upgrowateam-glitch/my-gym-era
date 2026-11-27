@@ -81,15 +81,17 @@ function buildUrl(path: string, query?: Query) {
 }
 
 async function request<T>(method: string, path: string, body?: unknown, query?: Query): Promise<T> {
+  const isForm = typeof FormData !== 'undefined' && body instanceof FormData;
   let res: Response;
   try {
     res = await fetch(buildUrl(path, query), {
       method,
       headers: {
-        ...(body !== undefined ? { 'Content-Type': 'application/json' } : {}),
+        // FormData (file uploads) sets its own Content-Type with the boundary.
+        ...(body !== undefined && !isForm ? { 'Content-Type': 'application/json' } : {}),
         ...(token ? { Authorization: `Bearer ${token}` } : {}),
       },
-      body: body !== undefined ? JSON.stringify(body) : undefined,
+      body: body === undefined ? undefined : isForm ? (body as FormData) : JSON.stringify(body),
     });
   } catch {
     throw new ApiError(0, `Cannot reach the server at ${API_URL}. Check that the backend is running and that this device is on the same Wi-Fi as the computer.`, 'network');
@@ -121,5 +123,7 @@ export const api = {
   post: <T>(path: string, body: unknown = {}) => request<T>('POST', path, body),
   put: <T>(path: string, body: unknown) => request<T>('PUT', path, body),
   patch: <T>(path: string, body: unknown) => request<T>('PATCH', path, body),
+  /** multipart/form-data upload (e.g. a video file in the field "file"). */
+  upload: <T>(path: string, form: FormData, query?: Query) => request<T>('POST', path, form, query),
   delete: <T>(path: string, body?: unknown) => request<T>('DELETE', path, body),
 };

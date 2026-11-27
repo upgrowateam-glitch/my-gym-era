@@ -132,16 +132,16 @@ export default function SuperAdminDashboard() {
 
             {/* Library + settings (one column) */}
             <View style={{ gap: 16 }}>
-            <Panel title="Workout & nutrition library" icon="library-outline">
+            <Panel title="Workout library" icon="film-outline" action={{ label: 'Open', onPress: () => go('/super-admin/library') }}>
               {!d ? <Loading /> : (
                 <MiniRow>
-                  <Mini label="Exercises" value={fmt(d.library.exercises)} />
                   <Mini label="Videos" value={fmt(d.library.videos)} />
-                  <Mini label="Folders" value={fmt(d.library.folders)} />
-                  <Mini label="Food items" value="Not set up" small />
+                  <Mini label="Categories" value={fmt(d.library.categories)} />
+                  <Mini label="Workouts sent" value={fmt(d.library.workoutsSent)} />
+                  <Mini label="Completed" value={fmt(d.library.workoutsCompleted)} />
                 </MiniRow>
               )}
-              <Muted>The library screens arrive in the workout & nutrition phase.</Muted>
+              <Muted>The food & nutrition library arrives in the nutrition phase.</Muted>
             </Panel>
             <Panel title="Application settings" icon="settings-outline">
               <LinkList items={[

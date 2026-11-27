@@ -158,9 +158,11 @@ adminRouter.get('/overview', requireRole('super_admin'), async (_req, res) => {
       FROM users WHERE role = 'trainer' AND NOT is_archived
       ORDER BY client_count DESC, display_name, email`),
     query(`
-      SELECT (SELECT count(*)::int FROM exercises) AS exercises,
-             (SELECT count(*)::int FROM media_items WHERE type = 'video') AS videos,
-             (SELECT count(*)::int FROM media_items WHERE type = 'folder') AS folders`),
+      SELECT (SELECT count(*)::int FROM workout_videos) AS videos,
+             (SELECT count(*)::int FROM workout_categories) AS categories,
+             (SELECT count(*)::int FROM workouts) AS workouts_sent,
+             (SELECT count(*)::int FROM workouts w WHERE EXISTS (SELECT 1 FROM workout_items i WHERE i.workout_id = w.id)
+                AND NOT EXISTS (SELECT 1 FROM workout_items i WHERE i.workout_id = w.id AND i.completed_at IS NULL)) AS workouts_completed`),
   ]);
 
   const c = counts.rows[0];
@@ -179,6 +181,11 @@ adminRouter.get('/overview', requireRole('super_admin'), async (_req, res) => {
     },
     invitations: { ...invitationCounts.rows[0], latest: latestInvitations.rows.map(toInvitation) },
     trainers: trainers.rows.map((r) => ({ ...toPublicUser(r), managerName: r.manager_name, clientCount: r.client_count })),
-    library: library.rows[0],
+    library: {
+      videos: library.rows[0].videos,
+      categories: library.rows[0].categories,
+      workoutsSent: library.rows[0].workouts_sent,
+      workoutsCompleted: library.rows[0].workouts_completed,
+    },
   });
 });

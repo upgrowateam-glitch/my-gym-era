@@ -11,6 +11,7 @@ export default function UserLayout() {
     <RequireRole roles={['client']} needsProfile>
       <Tabs screenOptions={tabBarOptions(USER)}>
         <Tabs.Screen name="home" options={{ title: 'Home', tabBarIcon: tabIcon('home-outline') }} />
+        <Tabs.Screen name="workouts" options={{ title: 'Workouts', tabBarIcon: tabIcon('barbell-outline') }} />
         <Tabs.Screen name="diary" options={{ title: 'Diary', tabBarIcon: tabIcon('calendar-outline') }} />
         <Tabs.Screen name="report" options={{ title: 'Report', tabBarIcon: tabIcon('stats-chart-outline') }} />
         <Tabs.Screen name="more" options={{ title: 'Profile', tabBarIcon: tabIcon('person-circle-outline') }} />

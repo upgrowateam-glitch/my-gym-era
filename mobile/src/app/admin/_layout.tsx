@@ -24,6 +24,7 @@ export default function AdminLayout() {
           title: 'Users', tabBarIcon: tabIcon('people-outline'), href: can(user, 'view_users') ? undefined : null,
         }} />
         <Tabs.Screen name="trainers" options={{ title: 'Trainers', tabBarIcon: tabIcon('barbell-outline') }} />
+        <Tabs.Screen name="library" options={{ title: 'Library', tabBarIcon: tabIcon('film-outline') }} />
         <Tabs.Screen name="invitations" options={{
           title: 'Invitations', tabBarIcon: tabIcon('mail-outline'), href: can(user, 'invite_trainers') ? undefined : null,
         }} />

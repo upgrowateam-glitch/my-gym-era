@@ -18,6 +18,7 @@ import {
   shortDate, SubHead, TrainerLoadRow, TWO_COLUMNS_MIN, WarnBox, AMBER,
 } from '@/components/staff/DashboardUI';
 import { ADMIN as p } from '@/theme/palettes';
+import { library } from '@/lib/workouts';
 
 const go = (href: Href) => router.push(href);
 const NEEDS_VIEW_USERS = 'Needs the "View all users" access from the Super Admin.';
@@ -38,14 +39,14 @@ export default function AdminDashboard() {
   const inviteTrainers = can(user, 'invite_trainers');
 
   const data = useApi(async () => {
-    const [stats, trainers, users, exercises, media] = await Promise.all([
+    const [stats, trainers, users, categories, videos] = await Promise.all([
       api.get<AdminStats>('/api/admin/stats'),
       api.get<{ trainers: TrainerSummary[] }>('/api/admin/trainers').then((r) => r.trainers),
       viewUsers ? api.get<{ users: User[] }>('/api/users', { role: 'client' }).then((r) => r.users) : Promise.resolve(null),
-      api.get<{ exercises: unknown[] }>('/api/exercises').then((r) => r.exercises.length),
-      api.get<{ items: { type: string }[] }>('/api/media', { all: true }).then((r) => r.items),
+      library.categories().then((r) => r.length),
+      library.videos(),
     ]);
-    return { stats, trainers, users, exercises, videos: media.filter((m) => m.type === 'video').length };
+    return { stats, trainers, users, categories, videos: videos.length, minutes: videos.reduce((n, v) => n + v.durationMinutes, 0) };
   });
   const d = data.data;
 
@@ -151,14 +152,15 @@ export default function AdminDashboard() {
 
             {/* 4–6. Library and progress (later phases) */}
             <View style={{ gap: 16 }}>
-              <Panel title="Workout video management" icon="play-circle-outline">
+              <Panel title="Workout video management" icon="play-circle-outline" action={{ label: 'Library', onPress: () => go('/admin/library') }}>
                 {!d ? <Loading /> : (
                   <MiniRow>
-                    <Mini label="Exercises" value={fmt(d.exercises)} />
                     <Mini label="Videos" value={fmt(d.videos)} />
+                    <Mini label="Categories" value={fmt(d.categories)} />
+                    <Mini label="Total time" value={`${Math.round(d.minutes / 6) / 10} h`} />
                   </MiniRow>
                 )}
-                <Locked icon="construct-outline" text="Adding and editing workout videos arrives in the workout library phase." />
+                <Button p={p} label="Add a video" icon="add" onPress={() => go('/video-form')} />
               </Panel>
               <Panel title="Food & nutrition management" icon="nutrition-outline">
                 <Locked icon="construct-outline" text="The master food database arrives in the nutrition library phase." />

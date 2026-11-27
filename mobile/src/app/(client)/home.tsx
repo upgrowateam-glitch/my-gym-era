@@ -5,11 +5,18 @@ import { router } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '@/lib/auth';
 import { Avatar, Button, Card, Page, SectionTitle } from '@/components/ui/UI';
+import { useApi } from '@/lib/useApi';
+import { todayKey, workouts } from '@/lib/workouts';
+import { WorkoutRow } from '@/components/library/WorkoutList';
 import { USER as p } from '@/theme/palettes';
 
 export default function UserHome() {
   const { user } = useAuth();
+  const list = useApi(() => workouts.of('me'));
   if (!user) return null;
+  const today = todayKey();
+  const todays = (list.data ?? []).filter((w) => w.date === today);
+  const next = (list.data ?? []).filter((w) => w.date > today).sort((a, b) => a.date.localeCompare(b.date))[0];
   const first = user.displayName?.split(' ')[0] || 'there';
 
   return (
@@ -46,6 +53,19 @@ export default function UserHome() {
         </Card>
       )}
 
+      <SectionTitle p={p} right={<Button p={p} small kind="outline" label="All workouts" onPress={() => router.push('/workouts')} />}>
+        Today&apos;s workout
+      </SectionTitle>
+      {todays.length > 0 ? todays.map((w) => <WorkoutRow key={w.id} p={p} w={w} />) : (
+        <Card p={p} style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
+          <Ionicons name="barbell-outline" size={24} color={p.textSecondary} />
+          <Text style={{ color: p.textSecondary, fontSize: 14, flex: 1 }}>
+            {list.data === null ? 'Loading…' : next ? 'No workout today. Your next one is below.' : 'No workout for today. Your trainer will send workouts here.'}
+          </Text>
+        </Card>
+      )}
+      {todays.length === 0 && next && <WorkoutRow p={p} w={next} />}
+
       <SectionTitle p={p}>My coach</SectionTitle>
       <Card p={p} style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
         <Ionicons name="barbell-outline" size={24} color={p.accent} />
@@ -57,7 +77,6 @@ export default function UserHome() {
       <SectionTitle p={p}>Coming soon</SectionTitle>
       <Card p={p} style={{ gap: 10 }}>
         {[
-          ['fitness-outline', 'Daily workouts from your trainer'],
           ['nutrition-outline', 'Nutrition plans'],
           ['chatbubbles-outline', 'Chat with your trainer'],
           ['trending-up-outline', 'Progress tracking'],

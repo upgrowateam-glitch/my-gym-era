@@ -11,6 +11,7 @@ import { trainerRouter } from './routes/trainer.js';
 import { invitationsRouter } from './routes/invitations.js';
 import { chatsRouter } from './routes/chats.js';
 import { uploadsRouter } from './routes/uploads.js';
+import { libraryRouter, workoutsRouter } from './routes/workouts.js';
 import { config } from './config.js';
 
 export function createApp() {
@@ -43,6 +44,8 @@ export function createApp() {
   app.use('/api/invitations', invitationsRouter);
   app.use('/api/chats', chatsRouter);
   app.use('/api/uploads', uploadsRouter);
+  app.use('/api/library', libraryRouter);
+  app.use('/api/workouts', workoutsRouter);
 
   // Uploaded files. Names are random UUIDs; dot-folders (the temp folder) are never served.
   app.use('/uploads', express.static(config.uploadDir, {

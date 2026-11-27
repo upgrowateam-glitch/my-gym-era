@@ -10,7 +10,7 @@ import { useAuth } from '@/lib/auth';
 import { api } from '@/lib/api';
 import { useApi } from '@/lib/useApi';
 import type { TrainerUser } from '@/lib/types';
-import { Notice } from '@/components/ui/UI';
+import { Button, Notice } from '@/components/ui/UI';
 import {
   AMBER, dashboardStyles, fmt, Grid, Hero, Kpi, KpiRow, Loading, Locked, Muted, Panel, PersonRow, plural, shortDate,
   TWO_COLUMNS_MIN,
@@ -71,8 +71,10 @@ export default function TrainerDashboard() {
 
             {/* Coming in later phases */}
             <View style={{ gap: 16 }}>
-              <Panel title="Workout & diet plans" icon="barbell-outline">
-                <Locked icon="construct-outline" text="Sending workout and diet plans from the library arrives in the plans phase." />
+              <Panel title="Workouts" icon="barbell-outline" action={{ label: 'Library', onPress: () => router.push('/trainer/library') }}>
+                <Muted>Choose videos from the library and send a workout to one of your users. You will see when they finish it.</Muted>
+                <Button p={p} label="Send a workout" icon="paper-plane-outline" onPress={() => router.push('/send-workout')} />
+                <Locked icon="construct-outline" text="Diet plans arrive in the nutrition phase." />
               </Panel>
               <Panel title="Progress tracking" icon="trending-up-outline">
                 <Locked icon="construct-outline" text="Your users' progress (workouts done, weight, activity) arrives with progress tracking." />

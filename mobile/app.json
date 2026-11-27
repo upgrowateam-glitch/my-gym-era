@@ -3,7 +3,7 @@
     "name": "FitZone",
     "slug": "my-gym-era",
     "scheme": "mygymera",
-    "version": "1.0.1",
+    "version": "1.0.2",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "dark",
@@ -14,7 +14,7 @@
     },
     "android": {
       "package": "com.mygymera.app",
-      "versionCode": 2,
+      "versionCode": 3,
       "adaptiveIcon": {
         "backgroundColor": "#202020",
         "foregroundImage": "./assets/android-icon-foreground.png"
@@ -48,6 +48,15 @@
           "image": "./assets/splash-icon.png",
           "imageWidth": 240,
           "resizeMode": "contain"
+        }
+      ],
+      "expo-video",
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "FitZone uses your photos and videos so admins can upload workout videos.",
+          "cameraPermission": false,
+          "microphonePermission": false
         }
       ]
     ],

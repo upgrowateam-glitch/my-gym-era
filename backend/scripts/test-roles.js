@@ -259,7 +259,7 @@ async function run() {
   check('…newest users, trainers with user counts, library counts',
     Array.isArray(ov.data?.users?.recent) && ov.data.users.recent.length >= 1
     && ov.data.trainers?.some((t) => typeof t.clientCount === 'number')
-    && typeof ov.data.library?.exercises === 'number' && typeof ov.data.library?.videos === 'number');
+    && typeof ov.data.library?.categories === 'number' && typeof ov.data.library?.videos === 'number');
   check('…no password hashes or link codes anywhere',
     !/password_hash|token_hash|"\$2[aby]\$/.test(JSON.stringify(ov.data)));
   check('Admin cannot open the Super Admin dashboard → 403',

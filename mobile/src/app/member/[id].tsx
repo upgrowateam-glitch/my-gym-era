@@ -22,6 +22,8 @@ import {
 import { RequireRole } from '@/components/RequireRole';
 import { Avatar, Badge, Notice, ToggleRow } from '@/components/ui/UI';
 import { TrainerAssign } from '@/components/TrainerAssign';
+import { WorkoutRow } from '@/components/library/WorkoutList';
+import { workouts } from '@/lib/workouts';
 import { dashboardStyles, Grid, Loading, Mini, MiniRow, Muted, Panel, shortDate, TWO_COLUMNS_MIN, AMBER } from '@/components/staff/DashboardUI';
 import { SUPER as p } from '@/theme/palettes';
 
@@ -71,6 +73,7 @@ function MemberProfile() {
                 ? <ManagePanel account={d.account} onChange={(u) => data.setData((cur) => (cur ? { ...cur, account: u } : cur))} />
                 : null} />
           )}
+          {d && <WorkoutsPanel userId={d.account.uid} active={!d.account.isArchived} />}
         </View>
       </ScrollView>
     </SafeAreaView>
@@ -252,6 +255,23 @@ function ManagePanel({ account: u, onChange }: { account: User; onChange: (u: Us
         }, 'Could not update the account.')} />
       {(error || trainers.error) && <Notice text={(error ?? trainers.error)!} />}
       {info && <Notice kind="info" text={info} />}
+    </Panel>
+  );
+}
+
+/** Workouts sent to this user, with how many are done, and "Send workout". */
+function WorkoutsPanel({ userId, active }: { userId: string; active: boolean }) {
+  const list = useApi(() => workouts.of(userId));
+  const all = list.data ?? [];
+  const done = all.filter((w) => w.completed).length;
+  return (
+    <Panel title={`Workouts${list.data ? ` (${done}/${all.length} completed)` : ''}`} icon="barbell-outline"
+      action={active ? { label: 'Send workout', onPress: () => router.push({ pathname: '/send-workout', params: { userId } }) } : undefined}>
+      {list.error && <Notice text={list.error} />}
+      {!list.data && !list.error ? <Loading /> : all.length === 0
+        ? <Muted>No workouts sent yet.</Muted>
+        : all.slice(0, 8).map((w) => <WorkoutRow key={w.id} p={p} w={w} />)}
+      {all.length > 8 && <Muted>Showing the latest 8 of {all.length}.</Muted>}
     </Panel>
   );
 }

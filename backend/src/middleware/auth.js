@@ -1,6 +1,6 @@
 import { verifyToken } from '../auth/tokens.js';
 import { query } from '../db.js';
-import { USER_COLUMNS, hasPermission } from '../users/userModel.js';
+import { USER_COLUMNS, TRAINER_NAME_COLUMN, hasPermission } from '../users/userModel.js';
 import { unauthorized, forbidden } from '../errors.js';
 
 export const ARCHIVED_MESSAGE = 'Your account has been deactivated. Please contact support.';
@@ -23,7 +23,7 @@ export async function requireAuth(req, _res, next) {
     throw unauthorized('Session expired. Please log in again.', 'invalid_token');
   }
 
-  const { rows } = await query(`SELECT ${USER_COLUMNS} FROM users WHERE id = $1`, [payload.sub]);
+  const { rows } = await query(`SELECT ${USER_COLUMNS}, ${TRAINER_NAME_COLUMN} FROM users WHERE id = $1`, [payload.sub]);
   const user = rows[0];
   if (!user) throw unauthorized('Session expired. Please log in again.', 'invalid_token');
   if (user.is_archived) throw forbidden(ARCHIVED_MESSAGE, 'account_archived');

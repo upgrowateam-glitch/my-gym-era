@@ -3,7 +3,7 @@
 // (the same privacy model as the Cloudinary URLs used today).
 //
 //   POST /api/uploads/chat-image        (any signed-in user)  image, max 10 MB
-//   POST /api/uploads/media?kind=media|exercises  (admin)     video or image, max 200 MB
+//   POST /api/uploads/media?kind=media|exercises|workouts  (admin)  video or image, max 200 MB
 //
 // Send as multipart/form-data with a single field named "file".
 // Response: { url, type: 'image'|'video', size }
@@ -94,6 +94,7 @@ uploadsRouter.post('/chat-image', receiveFile(10), async (req, res) => {
 });
 
 uploadsRouter.post('/media', requireRole('admin'), receiveFile(200), async (req, res) => {
-  const kind = req.query.kind === undefined ? 'media' : v.oneOf(req.query.kind, 'kind', ['media', 'exercises']);
-  res.status(201).json(await store(req, kind === 'media' ? 'media_library' : 'exercises', ['video', 'image']));
+  const kind = req.query.kind === undefined ? 'media' : v.oneOf(req.query.kind, 'kind', ['media', 'exercises', 'workouts']);
+  const folder = { media: 'media_library', exercises: 'exercises', workouts: 'workout_videos' }[kind];
+  res.status(201).json(await store(req, folder, ['video', 'image']));
 });

@@ -4,7 +4,7 @@ import { hashPassword, verifyPassword, burnTime, MIN_PASSWORD_LENGTH } from '../
 import { signToken } from '../auth/tokens.js';
 import { requireAuth, ARCHIVED_MESSAGE } from '../middleware/auth.js';
 import { getSetting } from '../settings.js';
-import { USER_COLUMNS, toPublicUser, loadTestClients } from '../users/userModel.js';
+import { USER_COLUMNS, TRAINER_NAME_COLUMN, toPublicUser, loadTestClients } from '../users/userModel.js';
 import { badRequest, unauthorized, forbidden, conflict } from '../errors.js';
 
 export const authRouter = Router();
@@ -62,7 +62,7 @@ authRouter.post('/login', async (req, res) => {
   const password = typeof req.body?.password === 'string' ? req.body.password : '';
 
   const { rows } = await query(
-    `SELECT ${USER_COLUMNS}, password_hash FROM users WHERE lower(email) = $1`,
+    `SELECT ${USER_COLUMNS}, ${TRAINER_NAME_COLUMN}, password_hash FROM users WHERE lower(email) = $1`,
     [email],
   );
   const row = rows[0];

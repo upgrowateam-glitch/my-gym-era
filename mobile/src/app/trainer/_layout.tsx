@@ -16,6 +16,7 @@ export default function TrainerLayout() {
         tabBar={wide ? (props) => <Sidebar {...props} p={TRAINER} /> : undefined}
       >
         <Tabs.Screen name="index" options={{ title: 'Dashboard', tabBarIcon: tabIcon('grid-outline') }} />
+        <Tabs.Screen name="library" options={{ title: 'Library', tabBarIcon: tabIcon('film-outline') }} />
         <Tabs.Screen name="profile" options={{ title: 'Profile', tabBarIcon: tabIcon('person-circle-outline') }} />
       </Tabs>
     </RequireRole>
