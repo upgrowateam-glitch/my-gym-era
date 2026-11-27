@@ -2,8 +2,9 @@
 //
 // When the installed app starts, it checks for a newer version in the
 // background (app.json: updates.checkAutomatically = ON_LOAD) and downloads it.
-// Once it is downloaded, this banner offers "Restart now" so the new version
-// is used straight away (otherwise it is used the next time the app starts).
+// Once it is downloaded, this banner (at the bottom of the screen, above the
+// tab bar) offers "Update" so the new version is used straight away
+// (otherwise it is used the next time the app starts).
 //
 // Only active in installed Android / iPhone builds: not on the web and not
 // while developing with `npx expo start` / Expo Go.
@@ -37,7 +38,7 @@ function Banner() {
   }
 
   return (
-    <SafeAreaView edges={['top']} style={styles.wrap} pointerEvents="box-none">
+    <SafeAreaView edges={['bottom']} style={styles.wrap} pointerEvents="box-none">
       <View style={styles.card}>
         <Ionicons name="cloud-download-outline" size={22} color={c.mint} />
         <Text style={styles.text}>
@@ -45,7 +46,7 @@ function Banner() {
         </Text>
         {!failed && (
           <Pressable onPress={restart} disabled={isRestarting} style={styles.button} accessibilityRole="button">
-            <Text style={styles.buttonText}>{isRestarting ? 'Restarting…' : 'Restart now'}</Text>
+            <Text style={styles.buttonText}>{isRestarting ? 'Updating…' : 'Update'}</Text>
           </Pressable>
         )}
         <Pressable onPress={() => setHidden(true)} hitSlop={10} accessibilityLabel="Later">
@@ -57,7 +58,8 @@ function Banner() {
 }
 
 const styles = StyleSheet.create({
-  wrap: { position: 'absolute', top: 0, left: 0, right: 0, paddingHorizontal: 12, paddingTop: 8 },
+  // Bottom of the screen, lifted above the tab bar (about 60 pt) so tabs stay tappable.
+  wrap: { position: 'absolute', bottom: 0, left: 0, right: 0, paddingHorizontal: 12, paddingBottom: 72 },
   card: {
     flexDirection: 'row', alignItems: 'center', gap: 10,
     backgroundColor: c.elevated, borderColor: c.mint + '66', borderWidth: 1, borderRadius: 16,

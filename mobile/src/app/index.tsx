@@ -1,20 +1,17 @@
 // FitZone splash screen — shown once each time the app starts (~1.5 s).
-// While it plays, the saved login and the "welcome slides seen" flag are
-// checked; then the visitor goes to:
-//   signed in            -> their dashboard
-//   slides already seen  -> /login
-//   first visit          -> /welcome (onboarding slides)
+// While it plays, the saved login is checked; then the visitor goes to:
+//   signed in      -> their dashboard
+//   not signed in  -> /welcome (the 3 welcome slides, every time), then /login
 // Later visits to "/" in the same session (e.g. right after logging in)
 // skip the animation and route straight away.
 
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Animated, Easing, Platform, StyleSheet, Text, View, useWindowDimensions } from 'react-native';
 import { Image } from 'expo-image';
 import { Redirect } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { homeRouteFor, useAuth } from '@/lib/auth';
 import { useFitZoneFonts } from '@/lib/fonts';
-import { hasSeenOnboarding } from '@/lib/onboarding';
 import { LoadingScreen } from '@/components/LoadingScreen';
 import { FitZoneBackdrop, FitZoneLogo, Glow } from '@/components/fitzone/Brand';
 import { fitzone as c, font } from '@/theme/colors';
@@ -24,15 +21,8 @@ let splashPlayed = false; // per app start (module memory resets when the app re
 
 export default function Index() {
   const { loading, user } = useAuth();
-  const [seen, setSeen] = useState<boolean | null>(null);
-  const playing = useRef(!splashPlayed).current;
+  const [playing] = useState(!splashPlayed); // decided once, when the screen first appears
   const [timeUp, setTimeUp] = useState(!playing);
-
-  useEffect(() => {
-    let active = true;
-    hasSeenOnboarding().then((v) => active && setSeen(v));
-    return () => { active = false; };
-  }, []);
 
   useEffect(() => {
     if (!playing) return;
@@ -40,8 +30,8 @@ export default function Index() {
     return () => clearTimeout(t);
   }, [playing]);
 
-  if (timeUp && !loading && seen !== null) {
-    return <Redirect href={user ? homeRouteFor(user) : seen ? '/login' : '/welcome'} />;
+  if (timeUp && !loading) {
+    return <Redirect href={user ? homeRouteFor(user) : '/welcome'} />;
   }
   return playing ? <Splash /> : <LoadingScreen color={c.mint} background={c.bg} />;
 }
@@ -50,8 +40,8 @@ function Splash() {
   const fontsReady = useFitZoneFonts();
   const { width: screenW, height: screenH } = useWindowDimensions();
   const w = Math.min(screenW, 480);
-  const fade = useRef(new Animated.Value(0)).current;
-  const progress = useRef(new Animated.Value(0)).current;
+  const [fade] = useState(() => new Animated.Value(0));
+  const [progress] = useState(() => new Animated.Value(0));
 
   useEffect(() => {
     Animated.timing(progress, { toValue: 1, duration: SPLASH_MS, easing: Easing.out(Easing.quad), useNativeDriver: false }).start();

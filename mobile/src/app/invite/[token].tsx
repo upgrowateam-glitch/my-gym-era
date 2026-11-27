@@ -13,7 +13,9 @@ import { ROLE_LABELS, type InvitationPreview } from '@/lib/types';
 import { fitzone as c, font } from '@/theme/colors';
 import { useFitZoneFonts } from '@/lib/fonts';
 import { FitZoneLogo } from '@/components/fitzone/Brand';
-import { AuthBackdrop, AuthField, AuthTitle, GlowCard, Message, PrimaryButton, Tagline } from '@/components/auth/AuthUI';
+import {
+  AuthAccentProvider, AuthBackdrop, AuthField, AuthTitle, GlowCard, GOLD, Message, PrimaryButton, Tagline,
+} from '@/components/auth/AuthUI';
 
 const MIN_PASSWORD = 6;
 
@@ -68,6 +70,7 @@ export default function AcceptInvitation() {
   }
 
   return (
+    <AuthAccentProvider value={GOLD}>
     <View style={styles.root}>
       <AuthBackdrop />
       <SafeAreaView style={{ flex: 1 }}>
@@ -90,7 +93,7 @@ export default function AcceptInvitation() {
                   <PrimaryButton label="Go to login" icon="log-in-outline" onPress={() => router.replace('/login')} />
                 </>
               ) : !invite ? (
-                <ActivityIndicator color={c.mint} style={{ marginTop: 40 }} />
+                <ActivityIndicator color={GOLD.main} style={{ marginTop: 40 }} />
               ) : (
                 <>
                   <AuthTitle
@@ -100,7 +103,7 @@ export default function AcceptInvitation() {
                   />
 
                   <View style={styles.roleBox}>
-                    <Ionicons name={invite.role === 'admin' ? 'shield-checkmark-outline' : 'barbell-outline'} size={26} color={c.mint} />
+                    <Ionicons name={invite.role === 'admin' ? 'shield-checkmark-outline' : 'barbell-outline'} size={26} color={GOLD.main} />
                     <View style={{ flex: 1 }}>
                       <Text style={styles.roleLabel}>Your role</Text>
                       <Text style={styles.roleValue}>{ROLE_LABELS[invite.role]}</Text>
@@ -129,6 +132,7 @@ export default function AcceptInvitation() {
         </KeyboardAvoidingView>
       </SafeAreaView>
     </View>
+    </AuthAccentProvider>
   );
 }
 
@@ -142,5 +146,5 @@ const styles = StyleSheet.create({
   roleValue: { color: c.text, fontFamily: font.bold, fontSize: 20 },
   expires: { color: c.textSecondary, fontFamily: font.regular, fontSize: 11.5, textAlign: 'right' },
   muted: { color: c.textSecondary, fontFamily: font.regular, fontSize: 13.5, textAlign: 'center' },
-  link: { color: c.mint, fontFamily: font.bold, fontSize: 14, textAlign: 'center', paddingVertical: 6 },
+  link: { color: GOLD.main, fontFamily: font.bold, fontSize: 14, textAlign: 'center', paddingVertical: 6 },
 });

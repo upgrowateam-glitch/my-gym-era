@@ -1,6 +1,6 @@
 // FitZone onboarding: three welcome slides (swipe or tap Next).
-// Skip (slides 1–2) and Get Started (slide 3) save "seen" on this device and
-// open the login page; returning visitors skip these slides (see app/index.tsx).
+// Shown every time the app opens for someone who is not signed in (see
+// app/index.tsx). Skip (slides 1–2) and Get Started (slide 3) open the login page.
 
 import { useRef, useState, type ReactNode } from 'react';
 import {
@@ -11,7 +11,6 @@ import { Image } from 'expo-image';
 import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { markOnboardingSeen } from '@/lib/onboarding';
 import { useFitZoneFonts } from '@/lib/fonts';
 import { FitZoneBackdrop, FitZoneLogo, Glow, LightStreaks } from '@/components/fitzone/Brand';
 import { PhoneMockup } from '@/components/fitzone/PhoneMockup';
@@ -110,10 +109,9 @@ export default function Welcome() {
     setIndex(i);
   }
 
-  async function finish() {
+  function finish() {
     if (leaving.current) return;
     leaving.current = true;
-    await markOnboardingSeen();
     router.replace('/login');
   }
 
