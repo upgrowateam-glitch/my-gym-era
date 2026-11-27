@@ -1,7 +1,6 @@
 // Colour sets for each signed-in area (used by components/ui/UI.tsx).
 
 import type { Palette } from '@/components/ui/UI';
-import { staff } from './colors';
 
 /** FitZone gold on dark charcoal (matches the logo and sign-in pages). */
 export const SUPER: Palette = {
@@ -12,11 +11,8 @@ export const SUPER: Palette = {
 /** Admin area: same FitZone gold (was dark navy + purple). */
 export const ADMIN: Palette = { ...SUPER };
 
-/** Trainer area: dark navy with cyan accent (to be redone in gold with its dashboard). */
-export const TRAINER: Palette = {
-  bg: staff.bg, card: staff.card, elevated: staff.elevated, border: '#2A3448',
-  text: staff.text, textSecondary: staff.textSecondary, accent: staff.trainer, onAccent: '#04121A',
-};
+/** Trainer area: same FitZone gold (was dark navy + cyan). */
+export const TRAINER: Palette = { ...SUPER };
 
 /** User (client) area: same FitZone gold (was Neon Lime). */
 export const USER: Palette = { ...SUPER };

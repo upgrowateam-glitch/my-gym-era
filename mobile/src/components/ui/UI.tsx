@@ -1,6 +1,6 @@
 // Shared building blocks for the signed-in areas (dashboards, lists, forms).
 // Every component takes the area's accent colour so the same pieces serve the
-// Super Admin + User (gold), Admin (purple) and Trainer (cyan) areas.
+// Super Admin, Admin, Trainer and User areas (all FitZone gold now).
 
 import { useState, type ReactNode } from 'react';
 import {

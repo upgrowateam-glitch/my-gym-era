@@ -1,13 +1,19 @@
-// Trainer dashboard: counts and the users assigned to this trainer
-// (assignment itself comes in a later phase). A trainer only ever sees
-// their own users — the server enforces this.
+// Trainer dashboard (gold): the users assigned to this trainer.
+// A trainer only ever sees their own users — the server enforces this.
+// Real data only; plans, progress and messages arrive in later phases.
 
-import { Text, View } from 'react-native';
+import { useState } from 'react';
+import { RefreshControl, ScrollView, View, type LayoutChangeEvent } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAuth } from '@/lib/auth';
 import { api } from '@/lib/api';
 import { useApi } from '@/lib/useApi';
 import type { TrainerUser } from '@/lib/types';
-import { Avatar, Card, Empty, Notice, Page, SectionTitle, StatTile } from '@/components/ui/UI';
+import { Notice } from '@/components/ui/UI';
+import {
+  AMBER, dashboardStyles, fmt, Grid, Hero, Kpi, KpiRow, Loading, Locked, Muted, Panel, PersonRow, plural, shortDate,
+  TWO_COLUMNS_MIN,
+} from '@/components/staff/DashboardUI';
 import { TRAINER as p } from '@/theme/palettes';
 
 interface TrainerStats { users: number; onboarding: number; unreadMessages: number }
@@ -23,31 +29,59 @@ export default function TrainerDashboard() {
   });
   const d = data.data;
 
-  return (
-    <Page p={p} kicker="TRAINER" title={`Welcome, ${user?.displayName?.split(' ')[0] || 'Coach'}`}
-      onRefresh={data.reload} refreshing={data.loading && !!d}>
-      {data.error && <Notice text={data.error} />}
-      <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 10 }}>
-        <StatTile p={p} icon="people-outline" label="My users" value={d?.stats.users} />
-        <StatTile p={p} icon="hourglass-outline" label="Still onboarding" value={d?.stats.onboarding} />
-      </View>
+  const [width, setWidth] = useState(0);
+  const twoCols = width >= TWO_COLUMNS_MIN;
+  const first = user?.displayName?.split(' ')[0] || 'Coach';
+  const onboarding = d?.users.filter((u) => !u.profileCompleted) ?? [];
 
-      <SectionTitle p={p}>My users</SectionTitle>
-      {d && d.users.length === 0 && (
-        <Empty p={p} icon="people-outline" text="No users assigned to you yet. Your admin will assign users to you." />
-      )}
-      {d?.users.map((u) => (
-        <Card key={u.uid} p={p} style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
-          <Avatar p={p} name={u.displayName || u.email} />
-          <View style={{ flex: 1 }}>
-            <Text style={{ color: p.text, fontSize: 15.5, fontWeight: '800' }}>{u.displayName || u.email}</Text>
-            <Text style={{ color: p.textSecondary, fontSize: 12.5 }}>
-              {u.profileCompleted ? 'Profile complete' : 'Onboarding not finished'}
-              {u.currentStreak ? ` · 🔥 ${u.currentStreak}-day streak` : ''}
-            </Text>
-          </View>
-        </Card>
-      ))}
-    </Page>
+  return (
+    <SafeAreaView style={{ flex: 1, backgroundColor: p.bg }} edges={['top', 'left', 'right']}>
+      <ScrollView contentContainerStyle={dashboardStyles.page}
+        refreshControl={<RefreshControl refreshing={data.loading && !!d} onRefresh={data.reload} tintColor={p.accent} />}>
+        <View onLayout={(e: LayoutChangeEvent) => setWidth(e.nativeEvent.layout.width)} style={{ gap: 16 }}>
+          <Hero wide={twoCols} hello={`Welcome back, ${first}`} title="Coach your clients"
+            subtitle={d ? `${plural(d.stats.users, 'user')} assigned to you` : ''} />
+          {data.error && <Notice text={data.error} />}
+
+          <KpiRow>
+            <Kpi minWidth={150} icon="people-outline" label="My users" value={d?.stats.users} note="Assigned to you" />
+            <Kpi minWidth={150} icon="hourglass-outline" label="Still onboarding" value={d?.stats.onboarding}
+              note={d?.stats.onboarding ? 'Profile not finished' : 'All profiles done'}
+              noteColor={d?.stats.onboarding ? AMBER : undefined} />
+            <Kpi minWidth={150} icon="chatbubbles-outline" label="Unread messages" value={d?.stats.unreadMessages}
+              note="From your users" />
+          </KpiRow>
+
+          <Grid twoCols={twoCols}>
+            {/* My assigned users */}
+            <Panel title="My assigned users" icon="people-outline">
+              {!d ? <Loading /> : d.users.length === 0
+                ? <Muted>No users assigned to you yet. Your admin will assign users to you.</Muted>
+                : d.users.map((u) => (
+                  <PersonRow key={u.uid} name={u.displayName || u.email}
+                    right={u.unreadMessages ? `${fmt(u.unreadMessages)} new` : shortDate(u.createdAt)}
+                    detail={`${u.profileCompleted ? 'Profile complete' : 'Onboarding not finished'}${u.currentStreak ? ` · 🔥 ${u.currentStreak}-day streak` : ''}`} />
+                ))}
+              {onboarding.length > 0 && (
+                <Muted>{plural(onboarding.length, 'user')} still {onboarding.length === 1 ? 'needs' : 'need'} to finish the fitness profile.</Muted>
+              )}
+            </Panel>
+
+            {/* Coming in later phases */}
+            <View style={{ gap: 16 }}>
+              <Panel title="Workout & diet plans" icon="barbell-outline">
+                <Locked icon="construct-outline" text="Sending workout and diet plans from the library arrives in the plans phase." />
+              </Panel>
+              <Panel title="Progress tracking" icon="trending-up-outline">
+                <Locked icon="construct-outline" text="Your users' progress (workouts done, weight, activity) arrives with progress tracking." />
+              </Panel>
+              <Panel title="Messages & feedback" icon="chatbubbles-outline">
+                <Locked icon="construct-outline" text="Chat with your users arrives in the messaging phase." />
+              </Panel>
+            </View>
+          </Grid>
+        </View>
+      </ScrollView>
+    </SafeAreaView>
   );
 }
