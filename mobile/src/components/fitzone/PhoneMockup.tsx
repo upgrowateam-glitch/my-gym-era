@@ -76,7 +76,7 @@ const styles = StyleSheet.create({
   ringCenter: { flex: 1, alignItems: 'center', justifyContent: 'center' },
   big: { color: c.text, fontFamily: font.bold },
   stat: { flexDirection: 'row', alignItems: 'center', backgroundColor: 'rgba(255,255,255,0.04)' },
-  statIcon: { alignItems: 'center', justifyContent: 'center', backgroundColor: 'rgba(111,224,160,0.12)' },
+  statIcon: { alignItems: 'center', justifyContent: 'center', backgroundColor: 'rgba(201,166,107,0.12)' },
   statLabel: { flex: 1, color: c.textSecondary, fontFamily: font.medium },
   statValue: { color: c.text, fontFamily: font.semibold },
 });

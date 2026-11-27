@@ -1,6 +1,6 @@
 // Shared building blocks for the signed-in areas (dashboards, lists, forms).
 // Every component takes the area's accent colour so the same pieces serve the
-// Super Admin / Admin (purple), Trainer (cyan) and User (lime) areas.
+// Super Admin + User (gold), Admin (purple) and Trainer (cyan) areas.
 
 import { useState, type ReactNode } from 'react';
 import {

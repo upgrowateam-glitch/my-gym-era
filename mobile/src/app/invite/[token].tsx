@@ -140,7 +140,7 @@ const styles = StyleSheet.create({
   root: { flex: 1, backgroundColor: c.bg },
   roleBox: {
     flexDirection: 'row', alignItems: 'center', gap: 12, padding: 14, borderRadius: 18,
-    borderWidth: 1, borderColor: 'rgba(111,224,160,0.4)', backgroundColor: 'rgba(111,224,160,0.07)',
+    borderWidth: 1, borderColor: 'rgba(201,166,107,0.4)', backgroundColor: 'rgba(201,166,107,0.07)',
   },
   roleLabel: { color: c.textSecondary, fontFamily: font.semibold, fontSize: 12, letterSpacing: 1, textTransform: 'uppercase' },
   roleValue: { color: c.text, fontFamily: font.bold, fontSize: 20 },

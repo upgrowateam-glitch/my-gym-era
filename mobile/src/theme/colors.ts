@@ -42,16 +42,16 @@ export const staff = {
 
 export const danger = '#EF5350';
 
-// FitZone brand (splash + onboarding): black / charcoal, muted mint, white.
+// FitZone brand: black / charcoal, gold (key "mint" kept for history), white.
 export const fitzone = {
   bg: '#050607',
   bgSecondary: '#0B0E10',
   card: '#111518',
   elevated: '#181D21',
   border: '#232A2F',
-  mint: '#6FE0A0',
-  mintDark: '#4FBF82',
-  onMint: '#04140B',
+  mint: '#C9A66B', // FitZone gold (the name "mint" is historical)
+  mintDark: '#A88A55',
+  onMint: '#17120A',
   text: '#FFFFFF',
   textSecondary: '#A7AEB4',
   muted: '#6B7379',

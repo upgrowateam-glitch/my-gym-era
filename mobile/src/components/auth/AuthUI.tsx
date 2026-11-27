@@ -20,7 +20,7 @@ export interface AuthAccent {
   /** "r,g,b" of `main`, for see-through versions */
   rgb: string;
 }
-export const MINT: AuthAccent = { main: c.mint, light: '#86E8B1', on: c.onMint, rgb: '111,224,160' };
+export const MINT: AuthAccent = { main: c.mint, light: '#E6CB94', on: c.onMint, rgb: '201,166,107' };
 export const GOLD: AuthAccent = { main: '#C9A66B', light: '#E6CB94', on: '#17120A', rgb: '201,166,107' };
 
 const AccentContext = createContext<AuthAccent>(MINT);

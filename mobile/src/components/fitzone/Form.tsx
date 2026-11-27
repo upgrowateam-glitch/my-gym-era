@@ -1,4 +1,4 @@
-// FitZone form controls for the fitness profile (mint on near-black).
+// FitZone form controls for the fitness profile (gold on near-black).
 // Built from plain views so they look and work the same on Android, iPhone and web
 // (no native date/time pickers needed).
 
@@ -8,7 +8,7 @@ import { Ionicons } from '@expo/vector-icons';
 import type { Option } from '@/lib/fitness';
 import { fitzone as c, font } from '@/theme/colors';
 
-const MINT = (a: number) => `rgba(111,224,160,${a})`;
+const MINT = (a: number) => `rgba(201,166,107,${a})`;
 
 export function Label({ children, hint }: { children: ReactNode; hint?: string }) {
   return (

@@ -1,21 +1,22 @@
 // FitZone visual building blocks shared by the splash and onboarding screens:
-// logo, soft mint glow, diagonal light streaks and the dark backdrop.
+// logo, soft gold glow, diagonal light streaks and the dark backdrop.
 
 import { useId } from 'react';
 import { StyleSheet, Text, View, type StyleProp, type ViewStyle } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
-import { Ionicons } from '@expo/vector-icons';
+import { Image } from 'expo-image';
 import Svg, { Defs, Ellipse, RadialGradient, Stop } from 'react-native-svg';
 import { fitzone as c, font } from '@/theme/colors';
 
-/** "FitZone" word mark with a small dumbbell badge. */
+const LOGO = require('../../../assets/brand/logo.png');
+
+/** "FitZone" word mark next to the round gold FitZone logo. */
 export function FitZoneLogo({ size = 34 }: { size?: number }) {
-  const badge = Math.round(size * 1.25);
+  const badge = Math.round(size * 1.5);
   return (
     <View style={styles.logoRow} accessibilityRole="header" accessibilityLabel="FitZone">
-      <View style={[styles.badge, { width: badge, height: badge, borderRadius: badge * 0.32 }]}>
-        <Ionicons name="barbell" size={Math.round(badge * 0.6)} color={c.mint} />
-      </View>
+      <Image source={LOGO} contentFit="contain" style={{ width: badge, height: badge, borderRadius: badge / 2 }}
+        accessibilityIgnoresInvertColors />
       <Text style={[styles.logoText, { fontSize: size }]}>
         Fit<Text style={{ color: c.mint }}>Zone</Text>
       </Text>
@@ -23,7 +24,7 @@ export function FitZoneLogo({ size = 34 }: { size?: number }) {
   );
 }
 
-/** Soft radial mint glow (drawn with SVG so it looks the same on phones and web). */
+/** Soft radial gold glow (drawn with SVG so it looks the same on phones and web). */
 export function Glow({ width, height = width, color = c.mint, opacity = 0.32, style }: {
   width: number; height?: number; color?: string; opacity?: number; style?: StyleProp<ViewStyle>;
 }) {
@@ -44,7 +45,7 @@ export function Glow({ width, height = width, color = c.mint, opacity = 0.32, st
   );
 }
 
-/** A few thin diagonal mint light lines behind the artwork. */
+/** A few thin diagonal gold light lines behind the artwork. */
 export function LightStreaks({ width, height }: { width: number; height: number }) {
   const lines = [
     { top: 0.18, opacity: 0.35, thickness: 1.5 },
@@ -75,13 +76,13 @@ export function LightStreaks({ width, height }: { width: number; height: number 
   );
 }
 
-/** Full-screen near-black background with a faint mint haze at the top. */
+/** Full-screen near-black background with a faint gold haze at the top. */
 export function FitZoneBackdrop() {
   return (
     <View pointerEvents="none" style={StyleSheet.absoluteFill}>
       <LinearGradient colors={[c.bgSecondary, c.bg, '#000000']} locations={[0, 0.55, 1]} style={StyleSheet.absoluteFill} />
       <LinearGradient
-        colors={['rgba(111,224,160,0.10)', 'rgba(111,224,160,0)']}
+        colors={['rgba(201,166,107,0.10)', 'rgba(201,166,107,0)']}
         start={{ x: 0.8, y: 0 }}
         end={{ x: 0.3, y: 0.45 }}
         style={StyleSheet.absoluteFill}
@@ -92,9 +93,5 @@ export function FitZoneBackdrop() {
 
 const styles = StyleSheet.create({
   logoRow: { flexDirection: 'row', alignItems: 'center', gap: 10 },
-  badge: {
-    alignItems: 'center', justifyContent: 'center',
-    borderWidth: 1.5, borderColor: 'rgba(111,224,160,0.55)', backgroundColor: 'rgba(111,224,160,0.08)',
-  },
   logoText: { color: c.text, fontFamily: font.extrabold, letterSpacing: -0.5 },
 });

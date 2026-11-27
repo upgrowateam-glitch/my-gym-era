@@ -608,7 +608,7 @@ const st = StyleSheet.create({
   link: { color: c.mint, fontFamily: font.bold, fontSize: 14, textAlign: 'center', paddingVertical: 6 },
   welcomeIcon: {
     width: 84, height: 84, borderRadius: 26, alignItems: 'center', justifyContent: 'center',
-    borderWidth: 1.5, borderColor: 'rgba(111,224,160,0.5)', backgroundColor: 'rgba(111,224,160,0.08)',
+    borderWidth: 1.5, borderColor: 'rgba(201,166,107,0.5)', backgroundColor: 'rgba(201,166,107,0.08)',
   },
   listCard: { borderRadius: 18, borderWidth: 1, borderColor: c.border, backgroundColor: 'rgba(17,21,24,0.9)', padding: 14, gap: 12 },
   listRow: { flexDirection: 'row', alignItems: 'center', gap: 10 },
@@ -617,7 +617,7 @@ const st = StyleSheet.create({
   listText: { color: '#DCE1E5', fontFamily: font.medium, fontSize: 14.5, flex: 1 },
   sleepSum: {
     flexDirection: 'row', alignItems: 'center', gap: 10, padding: 14, borderRadius: 16,
-    borderWidth: 1, borderColor: 'rgba(111,224,160,0.3)', backgroundColor: 'rgba(111,224,160,0.06)',
+    borderWidth: 1, borderColor: 'rgba(201,166,107,0.3)', backgroundColor: 'rgba(201,166,107,0.06)',
   },
   sleepSumText: { color: c.text, fontFamily: font.regular, fontSize: 15 },
   bmiCard: {
