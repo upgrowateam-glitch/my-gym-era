@@ -30,7 +30,9 @@ export function invitationUrl(token: string): string {
 
 /** wa.me link that opens WhatsApp with the message ready (number without +). */
 export function whatsappUrl(number: string | null, message: string): string {
-  const digits = (number ?? '').replace(/[^\d]/g, '');
+  let digits = (number ?? '').replace(/[^\d]/g, '');
+  // WhatsApp needs the country code. A plain 10-digit number (no +) is taken as Indian (+91).
+  if (digits.length === 10 && !(number ?? '').trim().startsWith('+')) digits = `91${digits}`;
   const text = encodeURIComponent(message);
   return digits ? `https://wa.me/${digits}?text=${text}` : `https://wa.me/?text=${text}`;
 }

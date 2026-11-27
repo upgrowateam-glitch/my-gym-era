@@ -3,6 +3,7 @@ import { StatusBar } from 'expo-status-bar';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { AuthProvider } from '@/lib/auth';
 import { UpdateBanner } from '@/components/UpdateBanner';
+import { ConfirmHost } from '@/lib/confirm';
 import { useFitZoneFonts } from '@/lib/fonts';
 import { fitzone } from '@/theme/colors';
 
@@ -15,6 +16,7 @@ export default function RootLayout() {
         <StatusBar style="light" />
         <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: fitzone.bg }, animation: 'fade' }} />
         <UpdateBanner />
+        <ConfirmHost />
       </AuthProvider>
     </SafeAreaProvider>
   );

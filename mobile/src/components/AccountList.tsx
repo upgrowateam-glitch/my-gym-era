@@ -85,7 +85,7 @@ export function AccountList({ p, roles, canToggle, canEditAccess, canAssignTrain
       setInfo(`${u.displayName || u.email} is active again. They have no WhatsApp number saved, so please let them know another way.`);
       return;
     }
-    if (await confirm(`${u.displayName || u.email} is active again`, `Tell ${name} on WhatsApp that they can sign in now?`, 'Open WhatsApp')) {
+    if (await confirm(`${u.displayName || u.email} is active again`, `Tell ${name} on WhatsApp that they can sign in now?`, 'Open WhatsApp', { tone: 'whatsapp' })) {
       const message = `Hi ${name}, good news! Your FitZone account is active again. You can sign in now: ${appBaseUrl()}/login`;
       try {
         await Linking.openURL(whatsappUrl(u.whatsapp, message));

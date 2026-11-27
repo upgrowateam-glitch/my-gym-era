@@ -233,5 +233,5 @@ function fmt(iso: string | null): string {
 
 function alertError(e: unknown) {
   const text = e instanceof ApiError ? e.message : 'Something went wrong.';
-  void confirm('Error', text, 'OK');
+  void confirm('Something went wrong', text, 'OK', { hideCancel: true, icon: 'alert-circle-outline' });
 }
