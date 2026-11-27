@@ -63,6 +63,10 @@ export function SupportContact({ details }: { details: SupportDetails }) {
     const message = lines.join('\n');
     try {
       await Linking.openURL(whatsappUrl(details.supportWhatsapp, message));
+      // Sent to WhatsApp: close the form (back to the link) and clear it.
+      setOpen(false);
+      setReason(null);
+      setNote('');
     } catch {
       setError('Could not open WhatsApp. Please check that WhatsApp is installed.');
     }
