@@ -25,6 +25,7 @@ import { badRequest, conflict, forbidden, notFound } from '../errors.js';
 import { USER_COLUMNS, isStaffFor } from '../users/userModel.js';
 import * as v from '../validate.js';
 import { config } from '../config.js';
+import { removeIfUnused } from '../uploadCleanup.js';
 import { readFileSync } from 'node:fs';
 
 // Starter food photos are stored as "/uploads/..." paths: add this server's address.
@@ -178,17 +179,20 @@ nutritionRouter.post('/foods', requireRole('admin'), async (req, res) => {
 
 nutritionRouter.put('/foods/:id', requireRole('admin'), async (req, res) => {
   const x = await readFood(req.body?.food);
+  const { rows: before } = await query('SELECT image_url FROM foods WHERE id = $1', [req.params.id]);
   const { rowCount } = await query(
     `UPDATE foods SET category_id = $2, name = $3, serving_size = $4, calories = $5, protein_g = $6, carbs_g = $7,
        fat_g = $8, diet_type = $9, image_url = $10 WHERE id = $1`,
     [req.params.id, x.categoryId, x.name, x.servingSize, x.calories, x.protein, x.carbs, x.fat, x.dietType, x.imageUrl]);
   if (!rowCount) throw notFound('Food not found.', 'food_not_found');
+  await removeIfUnused(before[0]?.image_url); // a replaced photo: free its disk space
   res.json({ food: await loadFood(req.params.id, baseOf(req)) });
 });
 
 nutritionRouter.delete('/foods/:id', requireRole('admin'), async (req, res) => {
-  const { rowCount } = await query('DELETE FROM foods WHERE id = $1', [req.params.id]);
-  if (!rowCount) throw notFound('Food not found.', 'food_not_found');
+  const { rows } = await query('DELETE FROM foods WHERE id = $1 RETURNING image_url', [req.params.id]);
+  if (!rows[0]) throw notFound('Food not found.', 'food_not_found');
+  await removeIfUnused(rows[0].image_url); // free the uploaded photo's disk space
   res.json({ ok: true });
 });
 

@@ -26,6 +26,7 @@ import { requireAuth, requireRole } from '../middleware/auth.js';
 import { badRequest, conflict, forbidden, notFound } from '../errors.js';
 import { USER_COLUMNS, isStaffFor } from '../users/userModel.js';
 import * as v from '../validate.js';
+import { removeIfUnused } from '../uploadCleanup.js';
 
 export const DIFFICULTIES = ['beginner', 'intermediate', 'advanced'];
 export const BODY_PARTS = [
@@ -201,6 +202,7 @@ libraryRouter.post('/videos', requireRole('admin'), async (req, res) => {
 
 libraryRouter.put('/videos/:id', requireRole('admin'), async (req, res) => {
   const x = await readVideo(req.body?.video);
+  const { rows: before } = await query('SELECT video_url, thumbnail_url FROM workout_videos WHERE id = $1', [req.params.id]);
   const { rowCount } = await query(
     `UPDATE workout_videos SET category_id = $2, title = $3, description = $4, source = $5, video_url = $6,
        thumbnail_url = $7, difficulty = $8, duration_minutes = $9, body_parts = $10, equipment = $11
@@ -208,12 +210,16 @@ libraryRouter.put('/videos/:id', requireRole('admin'), async (req, res) => {
     [req.params.id, x.categoryId, x.title, x.description, x.source, x.videoUrl, x.thumbnailUrl, x.difficulty,
       x.durationMinutes, x.bodyParts, x.equipment]);
   if (!rowCount) throw notFound('Video not found.', 'video_not_found');
+  // A replaced video file or cover picture: free its disk space.
+  for (const old of [before[0]?.video_url, before[0]?.thumbnail_url]) await removeIfUnused(old);
   res.json({ video: await loadVideo(req.params.id) });
 });
 
 libraryRouter.delete('/videos/:id', requireRole('admin'), async (req, res) => {
-  const { rowCount } = await query('DELETE FROM workout_videos WHERE id = $1', [req.params.id]);
-  if (!rowCount) throw notFound('Video not found.', 'video_not_found');
+  const { rows } = await query('DELETE FROM workout_videos WHERE id = $1 RETURNING video_url, thumbnail_url', [req.params.id]);
+  if (!rows[0]) throw notFound('Video not found.', 'video_not_found');
+  // Free the disk space of the uploaded video and its cover picture.
+  for (const url of [rows[0].video_url, rows[0].thumbnail_url]) await removeIfUnused(url);
   res.json({ ok: true });
 });
 

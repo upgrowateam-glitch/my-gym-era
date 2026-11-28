@@ -164,12 +164,32 @@ async function run() {
     && finished.data.url.includes('/uploads/workout_videos/'), finished.data);
   const served = finished.data?.url ? await fetch(finished.data.url.replace(/^https?:\/\/[^/]+/, base)) : null;
   check('…and the whole file is there', served?.status === 200 && Number(served.headers.get('content-length')) === size);
-  if (finished.data?.url) {
-    const { unlink } = await import('node:fs/promises');
-    const { config } = await import('../src/config.js');
-    await unlink(`${config.uploadDir}/${finished.data.url.split('/uploads/')[1]}`).catch(() => {});
-  }
   check('upload id cannot be used again → 404', (await api('POST', `/api/uploads/chunked/${id}/finish`, { token: admin.token })).status === 404);
+
+  // ── Freeing disk space ────────────────────────────────────────────────────
+  console.log('Freeing disk space');
+  const local = (url) => url.replace(/^https?:\/\/[^/]+/, base);
+  const smallUpload = async () => {
+    const s = await api('POST', '/api/uploads/chunked/start', { token: admin.token, body: { kind: 'workouts', size: 2048 } });
+    const f = Buffer.alloc(2048, 1); f.write('ftypisom', 4, 'latin1');
+    await fetch(`${base}/api/uploads/chunked/${s.data.uploadId}?offset=0`, {
+      method: 'PUT', headers: { authorization: `Bearer ${admin.token}`, 'content-type': 'application/octet-stream' }, body: f });
+    return (await api('POST', `/api/uploads/chunked/${s.data.uploadId}/finish`, { token: admin.token })).data.url;
+  };
+  const upVideo = await api('POST', '/api/library/videos', { token: admin.token, body: { video: {
+    ...good, title: 'Uploaded clip', source: 'upload', videoUrl: finished.data.url } } });
+  const replacement = await smallUpload();
+  await api('PUT', `/api/library/videos/${upVideo.data.video.id}`, { token: admin.token, body: { video: {
+    ...good, title: 'Uploaded clip', source: 'upload', videoUrl: replacement } } });
+  check('replacing the video file deletes the old file', (await fetch(local(finished.data.url))).status === 404);
+  check('…and keeps the new one', (await fetch(local(replacement))).status === 200);
+  await api('DELETE', `/api/library/videos/${upVideo.data.video.id}`, { token: admin.token });
+  check('deleting the video deletes its file', (await fetch(local(replacement))).status === 404);
+  const leftover = await smallUpload(); // uploaded, but the form was never saved
+  const { sweepOrphans } = await import('../src/uploadCleanup.js');
+  check('a fresh unused upload is kept (the form may still be open)', (await sweepOrphans()) >= 0 && (await fetch(local(leftover))).status === 200);
+  await sweepOrphans(0);
+  check('the clean-up removes old uploads nothing uses', (await fetch(local(leftover))).status === 404);
 
   // ── Deleting ──────────────────────────────────────────────────────────────
   console.log('Deleting');
