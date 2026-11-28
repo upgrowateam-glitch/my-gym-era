@@ -72,8 +72,19 @@ export function FoodsScreen({ p, canEdit, canSend }: { p: Palette; canEdit: bool
 
       {!foods.data && !foods.error && <Loading />}
       {foods.data && <Text style={{ color: p.textSecondary, fontSize: 13 }}>Showing {shown.length} of {all.length} foods · values are per serving</Text>}
-      {foods.data && shown.length === 0 && (
-        <Empty p={p} icon="nutrition-outline" text={all.length === 0 ? (canEdit ? 'No foods yet. Tap "Add food".' : 'No foods yet.') : 'No foods match.'} />
+      {foods.data && shown.length === 0 && all.length === 0 && (
+        <Empty p={p} icon="nutrition-outline" text={canEdit ? 'No foods yet. Tap "Add food".' : 'No foods yet.'} />
+      )}
+      {foods.data && shown.length === 0 && all.length > 0 && (
+        <View style={{ alignItems: 'center', gap: 10, paddingVertical: 20 }}>
+          <Empty p={p} icon="nutrition-outline" text={`No foods match ${[
+            category !== 'all' ? `"${cats.data?.find((c) => c.id === category)?.name ?? 'this category'}"` : null,
+            diet !== 'all' ? `"${FOOD_DIETS.find((d) => d.value === diet)?.label}"` : null,
+            q ? `"${search.trim()}"` : null,
+          ].filter(Boolean).join(' + ') || 'these filters'}.${category !== 'all' && diet === 'vegan' ? ' (Dairy, eggs, meat and fish are never vegan.)' : ''}`} />
+          <Button p={p} small kind="outline" label="Clear filters" icon="close"
+            onPress={() => { setCategory('all'); setDiet('all'); setSearch(''); }} />
+        </View>
       )}
       <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 10 }}>
         {shown.map((f) => (
