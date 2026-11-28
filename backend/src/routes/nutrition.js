@@ -12,7 +12,7 @@
 //   DELETE /api/nutrition/foods/:id               (admin) plans already sent keep their copy
 //
 // Nutrition plans (the newest one is the user's current plan):
-//   POST   /api/nutrition/plans  { userId, title, note, items: [{ foodId, meal, servings, note }] }
+//   POST   /api/nutrition/plans  { userId, title, note, mealTimes: { breakfast: "08:00", … }, items: [{ foodId, meal, servings, note }] }
 //          trainer → only their assigned users; Admin (with "View all users") / Super Admin → any user
 //   GET    /api/nutrition/plans?userId=<id>|me   { current, history }  the user or staff who may see them
 //   GET    /api/nutrition/plans/:id
@@ -216,7 +216,7 @@ async function accessTo(req, userId) {
 }
 
 const PLAN_SELECT = `
-  SELECT p.id, p.user_id, p.title, p.note, p.created_at, p.sent_by, s.display_name AS sent_by_name,
+  SELECT p.id, p.user_id, p.title, p.note, p.created_at, p.sent_by, p.meal_times, s.display_name AS sent_by_name,
          COALESCE(json_agg(json_build_object(
            'id', i.id, 'foodId', i.food_id, 'meal', i.meal, 'position', i.position, 'servings', i.servings, 'note', i.note,
            'name', i.food_name, 'servingSize', i.serving_size, 'calories', i.calories, 'protein', i.protein_g,
@@ -240,6 +240,7 @@ function toPlan(r, base) {
     sentBy: r.sent_by,
     sentByName: r.sent_by_name,
     createdAt: r.created_at,
+    mealTimes: r.meal_times ?? {},
     items,
     totals: { calories: Math.round(sum('calories')), protein: sum('protein'), carbs: sum('carbs'), fat: sum('fat') },
   };
@@ -299,12 +300,26 @@ nutritionRouter.post('/plans', staffOnly, async (req, res) => {
   const foods = new Map(foodRows.map((r) => [r.id, r]));
   if (items.some((i) => !foods.has(i.foodId))) throw badRequest('One of the foods no longer exists.', 'invalid_food');
 
+  // Meal times (optional): { breakfast: "08:00", … } in 24-hour HH:MM.
+  const mealTimes = {};
+  if (b.mealTimes !== undefined && b.mealTimes !== null) {
+    v.jsonObject(b.mealTimes, 'mealTimes');
+    for (const [meal, time] of Object.entries(b.mealTimes)) {
+      v.oneOf(meal, 'meal', MEALS);
+      if (time === null || time === '') continue;
+      if (typeof time !== 'string' || !/^([01]\d|2[0-3]):[0-5]\d$/.test(time)) {
+        throw badRequest('Meal times must be like 08:00 or 13:30 (24-hour).', 'invalid_time');
+      }
+      mealTimes[meal] = time;
+    }
+  }
+
   // Keep the meals in the usual order of the day.
   items.sort((a, z) => MEALS.indexOf(a.meal) - MEALS.indexOf(z.meal));
   const id = await withTransaction(async (client) => {
     const { rows } = await client.query(
-      'INSERT INTO nutrition_plans (user_id, sent_by, title, note) VALUES ($1,$2,$3,$4) RETURNING id',
-      [userId, req.user.id, title, note]);
+      'INSERT INTO nutrition_plans (user_id, sent_by, title, note, meal_times) VALUES ($1,$2,$3,$4,$5) RETURNING id',
+      [userId, req.user.id, title, note, mealTimes]);
     for (const [i, it] of items.entries()) {
       const f = foods.get(it.foodId);
       await client.query(

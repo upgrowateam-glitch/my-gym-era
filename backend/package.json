@@ -19,10 +19,11 @@
     "test:api": "node scripts/test-api.js",
     "test:chat": "node scripts/test-chat.js",
     "test:roles": "node scripts/test-roles.js",
-    "test": "node scripts/test-auth.js && node scripts/test-api.js && node scripts/test-chat.js && node scripts/test-roles.js && node scripts/test-profile.js && node scripts/test-workouts.js && node scripts/test-nutrition.js",
+    "test": "node scripts/test-auth.js && node scripts/test-api.js && node scripts/test-chat.js && node scripts/test-roles.js && node scripts/test-profile.js && node scripts/test-workouts.js && node scripts/test-nutrition.js && node scripts/test-weekly.js",
     "test:profile": "node scripts/test-profile.js",
     "test:workouts": "node scripts/test-workouts.js",
-    "test:nutrition": "node scripts/test-nutrition.js"
+    "test:nutrition": "node scripts/test-nutrition.js",
+    "test:weekly": "node scripts/test-weekly.js"
   },
   "dependencies": {
     "bcryptjs": "^3.0.3",

@@ -14,6 +14,7 @@ import { chatsRouter } from './routes/chats.js';
 import { uploadsRouter } from './routes/uploads.js';
 import { libraryRouter, workoutsRouter } from './routes/workouts.js';
 import { nutritionRouter } from './routes/nutrition.js';
+import { todayRouter, weeklyPlansRouter } from './routes/weeklyPlans.js';
 import { config } from './config.js';
 
 export function createApp() {
@@ -49,6 +50,8 @@ export function createApp() {
   app.use('/api/library', libraryRouter);
   app.use('/api/workouts', workoutsRouter);
   app.use('/api/nutrition', nutritionRouter);
+  app.use('/api/weekly-plans', weeklyPlansRouter);
+  app.use('/api/today', todayRouter);
 
   // Photos for the starter food list ship with the server (backend/static/starter-foods).
   app.use('/uploads/starter-foods', express.static(fileURLToPath(new URL('../static/starter-foods', import.meta.url)), {

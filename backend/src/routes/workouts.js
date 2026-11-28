@@ -225,16 +225,59 @@ libraryRouter.delete('/videos/:id', requireRole('admin'), async (req, res) => {
 
 // ── Workouts ────────────────────────────────────────────────────────────────
 
+/**
+ * Validates the exercises of a workout: video, note, and the optional details
+ * sets, reps OR a time in seconds (for moves like a plank), and rest between sets.
+ * Returns them with each video's current title.
+ */
+export async function readWorkoutItems(list) {
+  if (!Array.isArray(list) || list.length === 0) throw badRequest('Add at least one exercise.', 'no_items');
+  if (list.length > 30) throw badRequest('A workout can have up to 30 exercises.', 'too_many_items');
+  const opt = (x, field, min, max) => (x === undefined || x === null || x === '' ? null : v.number(x, field, { min, max, integer: true }));
+  const items = list.map((it, i) => {
+    v.jsonObject(it, `items[${i}]`);
+    const reps = opt(it.reps, 'Reps', 1, 200);
+    const durationSeconds = opt(it.durationSeconds, 'Time (seconds)', 5, 3600);
+    if (reps !== null && durationSeconds !== null) throw badRequest('Give either reps or a time, not both.', 'reps_or_time');
+    return {
+      videoId: v.string(it.videoId, 'videoId', { max: 128, allowEmpty: false }),
+      note: it.note === undefined || it.note === null ? '' : v.string(it.note, 'Exercise note', { max: 300 }),
+      sets: opt(it.sets, 'Sets', 1, 20),
+      reps,
+      durationSeconds,
+      restSeconds: opt(it.restSeconds, 'Rest (seconds)', 0, 600),
+    };
+  });
+  const { rows } = await query('SELECT id, title FROM workout_videos WHERE id = ANY($1)', [items.map((i) => i.videoId)]);
+  const titles = new Map(rows.map((r) => [r.id, r.title]));
+  if (items.some((i) => !titles.has(i.videoId))) throw badRequest('One of the videos no longer exists.', 'invalid_video');
+  return items.map((i) => ({ ...i, title: titles.get(i.videoId) }));
+}
+
+/** Saves one workout with its exercises (inside a transaction). Returns its id. */
+export async function insertWorkout(client, { userId, sentBy, title, date, note, weeklyPlanId = null, items }) {
+  const { rows } = await client.query(
+    'INSERT INTO workouts (user_id, sent_by, title, workout_date, note, weekly_plan_id) VALUES ($1,$2,$3,$4,$5,$6) RETURNING id',
+    [userId, sentBy, title, date, note, weeklyPlanId]);
+  for (const [i, it] of items.entries()) {
+    await client.query(
+      `INSERT INTO workout_items (workout_id, video_id, video_title, position, note, sets, reps, duration_seconds, rest_seconds)
+       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9)`,
+      [rows[0].id, it.videoId, it.title, i, it.note, it.sets, it.reps, it.durationSeconds, it.restSeconds]);
+  }
+  return rows[0].id;
+}
+
 export const workoutsRouter = Router();
 workoutsRouter.use(requireAuth);
 
-async function loadAccount(id) {
+export async function loadAccount(id) {
   const { rows } = await query(`SELECT ${USER_COLUMNS} FROM users WHERE id = $1`, [id]);
   return rows[0] ?? null;
 }
 
 /** May the signed-in person see this user's workouts? ('self' | 'staff' | throws) */
-async function accessTo(req, userId) {
+export async function accessTo(req, userId) {
   if (userId === req.user.id) {
     if (req.user.role !== 'client') throw badRequest('Only User accounts have workouts.', 'not_a_user_account');
     return 'self';
@@ -245,12 +288,13 @@ async function accessTo(req, userId) {
   return 'staff';
 }
 
-const WORKOUT_SELECT = `
-  SELECT w.id, w.user_id, w.title, w.workout_date, w.note, w.created_at, w.sent_by,
+export const WORKOUT_SELECT = `
+  SELECT w.id, w.user_id, w.title, w.workout_date, w.note, w.created_at, w.sent_by, w.weekly_plan_id,
          s.display_name AS sent_by_name, s.role AS sent_by_role,
          COALESCE(json_agg(json_build_object(
            'id', wi.id, 'videoId', wi.video_id, 'title', COALESCE(wv.title, wi.video_title), 'note', wi.note,
-           'position', wi.position, 'completedAt', wi.completed_at,
+           'position', wi.position, 'completedAt', wi.completed_at, 'sets', wi.sets, 'reps', wi.reps,
+           'durationSeconds', wi.duration_seconds, 'restSeconds', wi.rest_seconds,
            'video', CASE WHEN wv.id IS NULL THEN NULL ELSE json_build_object(
              'id', wv.id, 'source', wv.source, 'videoUrl', wv.video_url, 'thumbnailUrl', wv.thumbnail_url,
              'difficulty', wv.difficulty, 'durationMinutes', wv.duration_minutes, 'bodyParts', wv.body_parts,
@@ -261,7 +305,7 @@ const WORKOUT_SELECT = `
   LEFT JOIN workout_items wi ON wi.workout_id = w.id
   LEFT JOIN workout_videos wv ON wv.id = wi.video_id`;
 
-const toWorkout = (r) => {
+export const toWorkout = (r) => {
   const items = r.items;
   const done = items.filter((i) => i.completedAt).length;
   return {
@@ -273,6 +317,7 @@ const toWorkout = (r) => {
     sentBy: r.sent_by,
     sentByName: r.sent_by_name,
     sentByRole: r.sent_by_role,
+    weeklyPlanId: r.weekly_plan_id,
     createdAt: r.created_at,
     items,
     doneCount: done,
@@ -316,30 +361,8 @@ workoutsRouter.post('/', requireRole('admin', 'trainer'), async (req, res) => {
   if (!title) throw badRequest('Please enter a title.', 'invalid_title');
   const date = v.dateKey(b.date, 'Date');
   const note = b.note === undefined || b.note === null ? '' : v.string(b.note, 'Note', { max: 1000 });
-  if (!Array.isArray(b.items) || b.items.length === 0) throw badRequest('Add at least one video.', 'no_items');
-  if (b.items.length > 30) throw badRequest('A workout can have up to 30 videos.', 'too_many_items');
-  const items = b.items.map((it, i) => {
-    v.jsonObject(it, `items[${i}]`);
-    return {
-      videoId: v.string(it.videoId, 'videoId', { max: 128, allowEmpty: false }),
-      note: it.note === undefined || it.note === null ? '' : v.string(it.note, 'Video note', { max: 300 }),
-    };
-  });
-  const { rows: vids } = await query('SELECT id, title FROM workout_videos WHERE id = ANY($1)', [items.map((i) => i.videoId)]);
-  const titles = new Map(vids.map((r) => [r.id, r.title]));
-  if (items.some((i) => !titles.has(i.videoId))) throw badRequest('One of the videos no longer exists.', 'invalid_video');
-
-  const id = await withTransaction(async (client) => {
-    const { rows } = await client.query(
-      'INSERT INTO workouts (user_id, sent_by, title, workout_date, note) VALUES ($1,$2,$3,$4,$5) RETURNING id',
-      [userId, req.user.id, title, date, note]);
-    for (const [i, it] of items.entries()) {
-      await client.query(
-        'INSERT INTO workout_items (workout_id, video_id, video_title, position, note) VALUES ($1,$2,$3,$4,$5)',
-        [rows[0].id, it.videoId, titles.get(it.videoId), i, it.note]);
-    }
-    return rows[0].id;
-  });
+  const items = await readWorkoutItems(b.items);
+  const id = await withTransaction((client) => insertWorkout(client, { userId, sentBy: req.user.id, title, date, note, items }));
   res.status(201).json({ workout: await loadWorkout(id) });
 });
 

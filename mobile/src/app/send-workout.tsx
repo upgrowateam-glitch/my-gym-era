@@ -11,7 +11,8 @@ import { useAuth } from '@/lib/auth';
 import { api, ApiError } from '@/lib/api';
 import { useApi } from '@/lib/useApi';
 import type { User } from '@/lib/types';
-import { dayLabel, library, todayKey, workouts, type WorkoutVideo } from '@/lib/workouts';
+import { dayLabel, library, todayKey, workouts, type ExerciseDetails, type WorkoutVideo } from '@/lib/workouts';
+import { DEFAULT_DETAILS, ExerciseFields } from '@/components/library/ExerciseFields';
 import { Filters, initialFilters, type FilterValue } from '@/components/filters/Filters';
 import { applyVideoFilters, videoFilterSections } from '@/components/library/videoFilters';
 import { RequireRole } from '@/components/RequireRole';
@@ -29,7 +30,7 @@ export default function SendWorkoutRoute() {
   );
 }
 
-interface Picked { video: WorkoutVideo; note: string }
+interface Picked extends ExerciseDetails { video: WorkoutVideo; note: string }
 
 function SendWorkoutPage() {
   const params = useLocalSearchParams<{ userId?: string; videoId?: string }>();
@@ -69,7 +70,7 @@ function SendForm({ users, videos, userId: initialUser, videoId }: { users: User
   const [note, setNote] = useState('');
   const [picked, setPicked] = useState<Picked[]>(() => {
     const v = videos.find((x) => x.id === videoId);
-    return v ? [{ video: v, note: '' }] : [];
+    return v ? [{ video: v, note: '', ...DEFAULT_DETAILS }] : [];
   });
   const [browsing, setBrowsing] = useState(picked.length === 0);
   const [search, setSearch] = useState('');
@@ -89,7 +90,7 @@ function SendForm({ users, videos, userId: initialUser, videoId }: { users: User
   const minutes = picked.reduce((n, x) => n + x.video.durationMinutes, 0);
 
   const toggle = (v: WorkoutVideo) =>
-    setPicked((cur) => (cur.some((x) => x.video.id === v.id) ? cur.filter((x) => x.video.id !== v.id) : [...cur, { video: v, note: '' }]));
+    setPicked((cur) => (cur.some((x) => x.video.id === v.id) ? cur.filter((x) => x.video.id !== v.id) : [...cur, { video: v, note: '', ...DEFAULT_DETAILS }]));
   const move = (i: number, by: number) => setPicked((cur) => {
     const next = [...cur];
     const j = i + by;
@@ -106,7 +107,9 @@ function SendForm({ users, videos, userId: initialUser, videoId }: { users: User
     setSending(true);
     try {
       const w = await workouts.send({
-        userId, title: name, date, note: note.trim(), items: picked.map((x) => ({ videoId: x.video.id, note: x.note.trim() })),
+        userId, title: name, date, note: note.trim(), items: picked.map((x) => ({
+          videoId: x.video.id, note: x.note.trim(), sets: x.sets, reps: x.reps, durationSeconds: x.durationSeconds, restSeconds: x.restSeconds,
+        })),
       });
       router.replace(`/workout/${w.id}`);
     } catch (e) {
@@ -177,8 +180,9 @@ function SendForm({ users, videos, userId: initialUser, videoId }: { users: User
               <Small icon="arrow-down" onPress={() => move(i, 1)} disabled={i === picked.length - 1} />
               <Small icon="close" onPress={() => toggle(x.video)} danger />
             </View>
+            <ExerciseFields p={p} value={x} onChange={(d) => setPicked((cur) => cur.map((y, j) => (j === i ? { ...y, ...d } : y)))} />
             <TextInput value={x.note} onChangeText={(t) => setPicked((cur) => cur.map((y, j) => (j === i ? { ...y, note: t } : y)))}
-              placeholder="Note, e.g. 3 sets × 12 reps, 60 s rest" placeholderTextColor={p.textSecondary + '99'} maxLength={300}
+              placeholder="Note (optional), e.g. keep your back straight" placeholderTextColor={p.textSecondary + '99'} maxLength={300}
               selectionColor={p.accent}
               style={{ color: p.text, fontSize: 14, borderWidth: 1, borderColor: p.border, borderRadius: 10, paddingHorizontal: 10, paddingVertical: 8, outlineStyle: 'none' } as never} />
           </View>

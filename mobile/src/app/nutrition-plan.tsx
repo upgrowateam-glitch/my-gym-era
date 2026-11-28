@@ -13,7 +13,7 @@ import { api, ApiError } from '@/lib/api';
 import { useApi } from '@/lib/useApi';
 import type { User } from '@/lib/types';
 import { getFitnessOf, labelOf, DIET_TYPES } from '@/lib/fitness';
-import { MEALS, foodsApi, plansApi, scaled, servingsText, totalOf, type Food, type Meal } from '@/lib/nutrition';
+import { DEFAULT_MEAL_TIMES, MEALS, foodsApi, plansApi, scaled, servingsText, timeText, totalOf, type Food, type Meal } from '@/lib/nutrition';
 import { RequireRole } from '@/components/RequireRole';
 import { BackPage } from '@/components/staff/BackPage';
 import { FoodPicker } from '@/components/nutrition/FoodPicker';
@@ -107,6 +107,7 @@ function BuilderForm({ user, foods, current, fitness, onChangeUser }: {
   const skipped = (current?.items.length ?? 0) - lines.length;
   const [extraMeals, setExtraMeals] = useState<Meal[]>(() => [...new Set((current?.items ?? []).map((i) => i.meal))].filter((m) => !MAIN_MEALS.includes(m)));
   const [title, setTitle] = useState(current?.title ?? 'Nutrition plan');
+  const [mealTimes, setMealTimes] = useState<Record<Meal, string>>(() => ({ ...DEFAULT_MEAL_TIMES, ...(current?.mealTimes ?? {}) }));
   const [note, setNote] = useState(current?.note ?? '');
   const [picking, setPicking] = useState<Meal | null>(null);
   const [sending, setSending] = useState(false);
@@ -125,6 +126,8 @@ function BuilderForm({ user, foods, current, fitness, onChangeUser }: {
     try {
       const plan = await plansApi.send({
         userId: user.uid, title: title.trim(), note: note.trim(),
+        // Times only for the meals in the plan.
+        mealTimes: Object.fromEntries([...new Set(lines.map((l) => l.meal))].map((m) => [m, mealTimes[m]])),
         items: lines.map((l) => ({ foodId: l.food.id, meal: l.meal, servings: l.servings, note: l.note.trim() })),
       });
       router.replace(`/nutrition/${plan.id}`);
@@ -172,7 +175,10 @@ function BuilderForm({ user, foods, current, fitness, onChangeUser }: {
           <Card key={meal.value} p={p} style={{ gap: 10 }}>
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
               <Ionicons name={meal.icon} size={20} color={p.accent} />
-              <Text style={{ flex: 1, color: p.text, fontSize: 16.5, fontWeight: '800' }}>{meal.label}</Text>
+              <View style={{ flex: 1 }}>
+                <Text style={{ color: p.text, fontSize: 16.5, fontWeight: '800' }}>{meal.label}</Text>
+                <TimeStepper value={mealTimes[meal.value]} onChange={(t) => setMealTimes((cur) => ({ ...cur, [meal.value]: t }))} />
+              </View>
               {mine.length > 0 && <Text style={{ color: p.textSecondary, fontSize: 13 }}>{Math.round(kcal)} kcal</Text>}
               <Button p={p} small label="Add food" icon="add" onPress={() => setPicking(meal.value)} />
             </View>
@@ -228,6 +234,29 @@ function BuilderForm({ user, foods, current, fitness, onChangeUser }: {
         addedIds={lines.filter((l) => l.meal === picking).map((l) => l.food.id)}
         onAdd={(f) => picking && setLines((cur) => [...cur, { key: `k${nextKey++}`, food: f, meal: picking, servings: 1, note: '' }])}
         onClose={() => setPicking(null)} />
+    </View>
+  );
+}
+
+/** Meal time with − / + in 15-minute steps. */
+function TimeStepper({ value, onChange }: { value: string; onChange: (t: string) => void }) {
+  const [h, m] = value.split(':').map(Number);
+  const shift = (by: number) => {
+    const total = (h * 60 + m + by + 24 * 60) % (24 * 60);
+    onChange(`${String(Math.floor(total / 60)).padStart(2, '0')}:${String(total % 60).padStart(2, '0')}`);
+  };
+  const btn = (icon: 'remove' | 'add', by: number) => (
+    <Pressable onPress={() => shift(by)} hitSlop={6} accessibilityLabel={icon === 'add' ? 'Later' : 'Earlier'}
+      style={{ width: 24, height: 24, borderRadius: 12, alignItems: 'center', justifyContent: 'center', backgroundColor: p.elevated }}>
+      <Ionicons name={icon} size={14} color={p.accent} />
+    </Pressable>
+  );
+  return (
+    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 4 }}>
+      <Ionicons name="time-outline" size={14} color={p.textSecondary} />
+      {btn('remove', -15)}
+      <Text style={{ color: p.accent, fontWeight: '800', fontSize: 13.5, minWidth: 64, textAlign: 'center' }}>{timeText(value)}</Text>
+      {btn('add', 15)}
     </View>
   );
 }

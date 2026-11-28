@@ -34,6 +34,11 @@ export interface WorkoutItem {
   note: string;
   position: number;
   completedAt: string | null;
+  sets: number | null;
+  reps: number | null;
+  /** For timed moves (e.g. a plank), instead of reps. */
+  durationSeconds: number | null;
+  restSeconds: number | null;
   /** null when the video was deleted from the library. */
   video: Pick<WorkoutVideo, 'id' | 'source' | 'videoUrl' | 'thumbnailUrl' | 'difficulty' | 'durationMinutes' | 'bodyParts' | 'equipment' | 'description'> | null;
 }
@@ -47,6 +52,7 @@ export interface Workout {
   sentBy: string | null;
   sentByName: string | null;
   sentByRole: string | null;
+  weeklyPlanId: string | null;
   createdAt: string;
   items: WorkoutItem[];
   doneCount: number;
@@ -71,6 +77,29 @@ export const BODY_PARTS: { value: BodyPart; label: string; icon: IconName }[] = 
   { value: 'cardio', label: 'Cardio', icon: 'heart-outline' },
   { value: 'mobility', label: 'Mobility', icon: 'sync-outline' },
 ];
+
+/** What the trainer sets for one exercise. */
+export interface ExerciseDetails { sets: number | null; reps: number | null; durationSeconds: number | null; restSeconds: number | null }
+export interface ExerciseInput extends ExerciseDetails { videoId: string; note: string }
+
+/** "45 s" / "1 min" / "1 min 30 s" */
+export function secondsText(s: number) {
+  if (s < 60) return `${s} s`;
+  const m = Math.floor(s / 60);
+  const r = s % 60;
+  return r ? `${m} min ${r} s` : `${m} min`;
+}
+
+/** "3 sets × 12 reps · rest 60 s" (empty if nothing was set). */
+export function exerciseText(x: Partial<ExerciseDetails>): string {
+  const parts: string[] = [];
+  const what = x.reps ? `${x.reps} reps` : x.durationSeconds ? secondsText(x.durationSeconds) : '';
+  if (x.sets && what) parts.push(`${x.sets} ${x.sets === 1 ? 'set' : 'sets'} × ${what}`);
+  else if (x.sets) parts.push(`${x.sets} ${x.sets === 1 ? 'set' : 'sets'}`);
+  else if (what) parts.push(what);
+  if (x.restSeconds) parts.push(`rest ${secondsText(x.restSeconds)}`);
+  return parts.join(' · ');
+}
 
 export const difficultyOf = (d: Difficulty) => DIFFICULTIES.find((x) => x.value === d) ?? DIFFICULTIES[0];
 export const bodyPartLabel = (b: BodyPart) => BODY_PARTS.find((x) => x.value === b)?.label ?? b;
@@ -131,11 +160,42 @@ export const library = {
 export const workouts = {
   of: (userId: string) => api.get<{ workouts: Workout[] }>('/api/workouts', { userId }).then((r) => r.workouts),
   get: (id: string) => api.get<{ workout: Workout }>(`/api/workouts/${id}`).then((r) => r.workout),
-  send: (body: { userId: string; title: string; date: string; note: string; items: { videoId: string; note: string }[] }) =>
+  send: (body: { userId: string; title: string; date: string; note: string; items: ExerciseInput[] }) =>
     api.post<{ workout: Workout }>('/api/workouts', body).then((r) => r.workout),
   cancel: (id: string) => api.delete<{ ok: true }>(`/api/workouts/${id}`),
   setDone: (id: string, itemId: string, done: boolean) =>
     api.patch<{ workout: Workout }>(`/api/workouts/${id}/items/${itemId}`, { done }).then((r) => r.workout),
+};
+
+// ── Weekly plans and the daily follow-up (Phase 7) ─────────────────────────
+
+export const WEEKDAYS = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+export const WEEKDAYS_SHORT = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+/** 0 = Monday … 6 = Sunday, for a YYYY-MM-DD date. */
+export const weekdayOf = (date: string) => (new Date(`${date}T00:00:00`).getDay() + 6) % 7;
+
+export interface PlanDay { weekday: number; rest: boolean; title: string; items: (ExerciseInput & { title: string })[] }
+export interface WeeklyPlan {
+  id: string; userId: string; sentBy: string | null; sentByName: string | null; title: string;
+  startDate: string; weeks: number; endDate: string; note: string; days: PlanDay[]; createdAt: string;
+}
+export interface DaySummary { date: string; exercisesPlanned: number; exercisesDone: number; mealsPlanned: number; mealsDone: number }
+
+export const weeklyApi = {
+  of: (userId: string) => api.get<{ current: WeeklyPlan | null; history: WeeklyPlan[] }>('/api/weekly-plans', { userId }),
+  get: (id: string) => api.get<{ plan: WeeklyPlan }>(`/api/weekly-plans/${id}`).then((r) => r.plan),
+  send: (body: { userId: string; title: string; startDate: string; weeks: number; note: string;
+    days: { weekday: number; rest: boolean; title: string; items: ExerciseInput[] }[] }) =>
+    api.post<{ plan: WeeklyPlan; workoutsCreated: number }>('/api/weekly-plans', body),
+  remove: (id: string) => api.delete<{ ok: true }>(`/api/weekly-plans/${id}`),
+};
+
+export const todayApi = {
+  day: (userId: string, date: string) =>
+    api.get<{ date: string; workouts: Workout[]; mealsDone: { meal: string; doneAt: string }[] }>('/api/today', { userId, date }),
+  tickMeal: (date: string, meal: string, done: boolean) =>
+    api.put<{ date: string; mealsDone: { meal: string; doneAt: string }[] }>('/api/today/meals', { date, meal, done }),
+  summary: (userId: string, days = 7) => api.get<{ days: DaySummary[] }>('/api/today/summary', { userId, days }).then((r) => r.days),
 };
 
 /** Uploads a picked video or picture (workout videos, food photos); returns its web address. */

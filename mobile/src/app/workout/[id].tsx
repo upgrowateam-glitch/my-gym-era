@@ -9,7 +9,7 @@ import { useAuth } from '@/lib/auth';
 import { ApiError } from '@/lib/api';
 import { useApi } from '@/lib/useApi';
 import { confirm } from '@/lib/confirm';
-import { bodyPartsText, dayLabel, workouts, type Workout, type WorkoutItem } from '@/lib/workouts';
+import { bodyPartsText, dayLabel, exerciseText, workouts, type Workout, type WorkoutItem } from '@/lib/workouts';
 import { RequireRole } from '@/components/RequireRole';
 import { VideoPlayer } from '@/components/VideoPlayer';
 import { DifficultyBadge, VideoThumb } from '@/components/library/VideoCard';
@@ -98,7 +98,8 @@ function WorkoutPage() {
                     <Text style={{ color: p.text, fontSize: 15.5, fontWeight: '800', textDecorationLine: done ? 'line-through' : 'none' }} numberOfLines={2}>
                       {i + 1}. {item.title}
                     </Text>
-                    {item.note ? <Text style={{ color: p.accent, fontSize: 13.5, fontWeight: '700' }}>{item.note}</Text> : null}
+                    {exerciseText(item) ? <Text style={{ color: p.accent, fontSize: 14, fontWeight: '800' }}>{exerciseText(item)}</Text> : null}
+                    {item.note ? <Text style={{ color: p.text, fontSize: 13 }}>{item.note}</Text> : null}
                     <Text style={{ color: p.textSecondary, fontSize: 12.5 }} numberOfLines={1}>
                       {item.video ? `${item.video.durationMinutes} min · ${bodyPartsText(item.video.bodyParts)}` : 'This video was removed from the library'}
                     </Text>

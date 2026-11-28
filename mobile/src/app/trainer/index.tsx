@@ -72,8 +72,9 @@ export default function TrainerDashboard() {
             {/* Coming in later phases */}
             <View style={{ gap: 16 }}>
               <Panel title="Workouts & nutrition" icon="barbell-outline" action={{ label: 'Library', onPress: () => router.push('/trainer/library') }}>
-                <Muted>Send workouts (videos from the library) and a daily nutrition plan to your users. You will see when they finish workouts.</Muted>
-                <Button p={p} label="Send a workout" icon="paper-plane-outline" onPress={() => router.push('/send-workout')} />
+                <Muted>Build a weekly plan (workouts with sets, reps and rest) and a daily diet with meal times. You will see how well each user follows it.</Muted>
+                <Button p={p} label="Create a weekly plan" icon="calendar-outline" onPress={() => router.push('/weekly-plan')} />
+                <Button p={p} kind="outline" label="Send a single workout" icon="paper-plane-outline" onPress={() => router.push('/send-workout')} />
                 <Button p={p} kind="outline" label="Send a nutrition plan" icon="nutrition-outline" onPress={() => router.push('/nutrition-plan')} />
               </Panel>
               <Panel title="Progress tracking" icon="trending-up-outline">

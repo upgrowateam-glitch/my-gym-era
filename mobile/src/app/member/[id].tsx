@@ -25,6 +25,7 @@ import { TrainerAssign } from '@/components/TrainerAssign';
 import { WorkoutRow } from '@/components/library/WorkoutList';
 import { workouts } from '@/lib/workouts';
 import { plansApi } from '@/lib/nutrition';
+import { FollowUpPanel, WeeklyPlanPanel } from '@/components/plans/PlanPanels';
 import { dashboardStyles, Grid, Loading, Mini, MiniRow, Muted, Panel, shortDate, TWO_COLUMNS_MIN, AMBER } from '@/components/staff/DashboardUI';
 import { SUPER as p } from '@/theme/palettes';
 
@@ -74,6 +75,8 @@ function MemberProfile() {
                 ? <ManagePanel account={d.account} onChange={(u) => data.setData((cur) => (cur ? { ...cur, account: u } : cur))} />
                 : null} />
           )}
+          {d && <FollowUpPanel p={p} userId={d.account.uid} />}
+          {d && <WeeklyPlanPanel p={p} userId={d.account.uid} active={!d.account.isArchived} />}
           {d && <WorkoutsPanel userId={d.account.uid} active={!d.account.isArchived} />}
           {d && <NutritionPanel userId={d.account.uid} active={!d.account.isArchived} />}
         </View>

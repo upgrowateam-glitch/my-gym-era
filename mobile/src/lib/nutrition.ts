@@ -50,6 +50,8 @@ export interface NutritionPlan {
   sentBy: string | null;
   sentByName: string | null;
   createdAt: string;
+  /** { breakfast: "08:00", … } 24-hour */
+  mealTimes: Partial<Record<Meal, string>>;
   items: PlanItem[];
   totals: Macros;
 }
@@ -63,6 +65,18 @@ export const MEALS: { value: Meal; label: string; icon: IconName }[] = [
   { value: 'evening_snack', label: 'Evening snack', icon: 'nutrition-outline' },
   { value: 'dinner', label: 'Dinner', icon: 'moon-outline' },
 ];
+/** Usual times, used when the trainer has not set one. */
+export const DEFAULT_MEAL_TIMES: Record<Meal, string> = {
+  breakfast: '08:00', mid_morning: '10:30', lunch: '13:30', pre_workout: '17:00', post_workout: '18:30', evening_snack: '16:30', dinner: '20:30',
+};
+/** "13:30" → "1:30 PM" */
+export function timeText(t: string | undefined | null): string {
+  const m = t ? /^(\d{2}):(\d{2})$/.exec(t) : null;
+  if (!m) return '';
+  const h = Number(m[1]);
+  return `${((h + 11) % 12) + 1}:${m[2]} ${h < 12 ? 'AM' : 'PM'}`;
+}
+
 export const mealOf = (m: Meal) => MEALS.find((x) => x.value === m) ?? MEALS[0];
 
 export const FOOD_DIETS: { value: FoodDiet; label: string; color: string }[] = [
@@ -112,7 +126,7 @@ export const foodsApi = {
 export const plansApi = {
   of: (userId: string) => api.get<{ current: NutritionPlan | null; history: NutritionPlan[] }>('/api/nutrition/plans', { userId }),
   get: (id: string) => api.get<{ plan: NutritionPlan }>(`/api/nutrition/plans/${id}`).then((r) => r.plan),
-  send: (body: { userId: string; title: string; note: string; items: { foodId: string; meal: Meal; servings: number; note: string }[] }) =>
+  send: (body: { userId: string; title: string; note: string; mealTimes: Partial<Record<Meal, string>>; items: { foodId: string; meal: Meal; servings: number; note: string }[] }) =>
     api.post<{ plan: NutritionPlan }>('/api/nutrition/plans', body).then((r) => r.plan),
   remove: (id: string) => api.delete<{ ok: true }>(`/api/nutrition/plans/${id}`),
 };

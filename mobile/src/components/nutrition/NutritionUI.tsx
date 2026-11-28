@@ -5,7 +5,7 @@ import { Pressable, Text, View, type ViewStyle } from 'react-native';
 import { Image } from 'expo-image';
 import { Ionicons } from '@expo/vector-icons';
 import {
-  MACRO_COLORS, MEALS, dietOf, scaled, servingsText, type Food, type Macros, type NutritionPlan, type PlanItem,
+  DEFAULT_MEAL_TIMES, MACRO_COLORS, MEALS, dietOf, scaled, servingsText, timeText, type Food, type Macros, type Meal, type NutritionPlan, type PlanItem,
 } from '@/lib/nutrition';
 import type { Palette } from '@/components/ui/UI';
 import { foodEmoji } from '@/lib/foodPictures';
@@ -127,6 +127,12 @@ export function PlanItemRow({ p, item }: { p: Palette; item: PlanItem }) {
   );
 }
 
+/** The plan's meals, earliest first (by their time; usual times when not set). */
+export function mealsInTimeOrder(plan: Pick<NutritionPlan, 'mealTimes'>) {
+  const t = (m: Meal) => plan.mealTimes?.[m] ?? DEFAULT_MEAL_TIMES[m];
+  return [...MEALS].sort((a, z) => t(a.value).localeCompare(t(z.value)));
+}
+
 /** A whole plan: totals, the trainer's message, then each meal with its foods. */
 export function PlanView({ p, plan }: { p: Palette; plan: NutritionPlan }) {
   return (
@@ -138,7 +144,7 @@ export function PlanView({ p, plan }: { p: Palette; plan: NutritionPlan }) {
           <Text style={{ flex: 1, color: p.text, fontSize: 14.5, lineHeight: 21 }}>{plan.note}</Text>
         </View>
       ) : null}
-      {MEALS.map((meal) => {
+      {mealsInTimeOrder(plan).map((meal) => {
         const items = plan.items.filter((i) => i.meal === meal.value);
         if (items.length === 0) return null;
         const kcal = items.reduce((n, i) => n + i.calories * i.servings, 0);
@@ -148,7 +154,10 @@ export function PlanView({ p, plan }: { p: Palette; plan: NutritionPlan }) {
               <View style={{ width: 34, height: 34, borderRadius: 10, alignItems: 'center', justifyContent: 'center', backgroundColor: p.accent + '22' }}>
                 <Ionicons name={meal.icon} size={18} color={p.accent} />
               </View>
-              <Text style={{ flex: 1, color: p.text, fontSize: 16.5, fontWeight: '800' }}>{meal.label}</Text>
+              <View style={{ flex: 1 }}>
+                <Text style={{ color: p.text, fontSize: 16.5, fontWeight: '800' }}>{meal.label}</Text>
+                {plan.mealTimes?.[meal.value] ? <Text style={{ color: p.accent, fontSize: 12.5, fontWeight: '700' }}>{timeText(plan.mealTimes[meal.value])}</Text> : null}
+              </View>
               <Text style={{ color: p.textSecondary, fontSize: 13 }}>{Math.round(kcal)} kcal</Text>
             </View>
             {items.map((i) => <PlanItemRow key={i.id} p={p} item={i} />)}
