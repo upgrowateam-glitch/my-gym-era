@@ -1,8 +1,8 @@
 // Phase 5: workout video library + workouts sent to users.
 // Types, labels and server calls. The server checks who may do what.
 
-import { Platform } from 'react-native';
 import { api } from './api';
+import { uploadInPieces, type PickedFile } from './upload';
 import type { IconName } from '@/components/ui/UI';
 
 export type Difficulty = 'beginner' | 'intermediate' | 'advanced';
@@ -139,18 +139,11 @@ export const workouts = {
 };
 
 /** Uploads a picked video or picture (workout videos, food photos); returns its web address. */
-export async function uploadFile(
-  asset: { uri: string; fileName?: string | null; mimeType?: string; file?: File },
+export function uploadFile(
+  asset: PickedFile,
   kind: 'workouts' | 'foods' = 'workouts',
+  onProgress?: (share: number) => void,
 ): Promise<string> {
-  const form = new FormData();
-  const name = asset.fileName || `video-${Date.now()}.mp4`;
-  if (Platform.OS === 'web') {
-    const blob = asset.file ?? await (await fetch(asset.uri)).blob();
-    form.append('file', blob, name);
-  } else {
-    // React Native's FormData takes { uri, name, type } for a file on the phone.
-    form.append('file', { uri: asset.uri, name, type: asset.mimeType || 'video/mp4' } as unknown as Blob);
-  }
-  return (await api.upload<{ url: string }>('/api/uploads/media', form, { kind })).url;
+  // Sent in small pieces with retries, so big videos survive slow phone connections.
+  return uploadInPieces(asset, kind, onProgress);
 }

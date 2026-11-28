@@ -65,6 +65,11 @@ export function setAuthToken(value: string | null) {
   token = value;
 }
 
+/** The sign-in header, for requests made outside api (file uploads with progress). */
+export function authHeader(): Record<string, string> {
+  return token ? { Authorization: `Bearer ${token}` } : {};
+}
+
 /** Called when the server says the login is no longer valid (expired / archived). */
 export function setSessionInvalidHandler(handler: (() => void) | null) {
   onSessionInvalid = handler;
@@ -94,7 +99,9 @@ async function request<T>(method: string, path: string, body?: unknown, query?: 
       body: body === undefined ? undefined : isForm ? (body as FormData) : JSON.stringify(body),
     });
   } catch {
-    throw new ApiError(0, `Cannot reach the server at ${API_URL}. Check that the backend is running and that this device is on the same Wi-Fi as the computer.`, 'network');
+    throw new ApiError(0, __DEV__
+      ? `Cannot reach the server at ${API_URL}. Check that the backend is running and that this device is on the same Wi-Fi as the computer.`
+      : 'Cannot reach FitZone right now. Check your internet connection and try again.', 'network');
   }
 
   let data: any = null;

@@ -11,10 +11,10 @@
 // The file type is detected from the file's actual bytes, not its name, so a
 // renamed file (e.g. a script called photo.jpg) is rejected.
 
-import { Router } from 'express';
+import express, { Router } from 'express';
 import multer from 'multer';
 import { randomUUID } from 'node:crypto';
-import { mkdir, open, rename, unlink } from 'node:fs/promises';
+import { appendFile, mkdir, open, rename, unlink } from 'node:fs/promises';
 import path from 'node:path';
 import { requireAuth, requireRole } from '../middleware/auth.js';
 import { config } from '../config.js';
@@ -57,7 +57,10 @@ function receiveFile(maxMb) {
 /** Validates the received temp file and moves it into uploads/<folder>/<yyyy-mm>/. */
 async function store(req, folder, allowedTypes) {
   if (!req.file) throw badRequest('Attach the file in a form field named "file".', 'no_file');
-  const tmpPath = req.file.path;
+  return storeFile(req, req.file.path, req.file.size, folder, allowedTypes);
+}
+
+async function storeFile(req, tmpPath, size, folder, allowedTypes) {
   try {
     const fh = await open(tmpPath, 'r');
     const head = Buffer.alloc(16);
@@ -76,7 +79,7 @@ async function store(req, folder, allowedTypes) {
     await rename(tmpPath, path.join(config.uploadDir, relDir, fileName));
 
     const baseUrl = config.publicBaseUrl ?? `${req.protocol}://${req.get('host')}`;
-    return { url: `${baseUrl}/uploads/${relDir}/${fileName}`, type: detected.type, size: req.file.size };
+    return { url: `${baseUrl}/uploads/${relDir}/${fileName}`, type: detected.type, size };
   } catch (err) {
     await unlink(tmpPath).catch(() => {});
     throw err;
@@ -93,8 +96,71 @@ uploadsRouter.post('/chat-image', receiveFile(10), async (req, res) => {
   res.status(201).json(await store(req, 'chat_images', ['image']));
 });
 
+const MEDIA_FOLDERS = { media: 'media_library', exercises: 'exercises', workouts: 'workout_videos', foods: 'foods' };
+const readKind = (k) => (k === undefined ? 'media' : v.oneOf(k, 'kind', Object.keys(MEDIA_FOLDERS)));
+
 uploadsRouter.post('/media', requireRole('admin'), receiveFile(200), async (req, res) => {
-  const kind = req.query.kind === undefined ? 'media' : v.oneOf(req.query.kind, 'kind', ['media', 'exercises', 'workouts', 'foods']);
-  const folder = { media: 'media_library', exercises: 'exercises', workouts: 'workout_videos', foods: 'foods' }[kind];
-  res.status(201).json(await store(req, folder, ['video', 'image']));
+  res.status(201).json(await store(req, MEDIA_FOLDERS[readKind(req.query.kind)], ['video', 'image']));
+});
+
+// ── Uploads in pieces (large videos over slow phone connections) ────────────
+// One big request can be cut off by the connection or a proxy timeout, so the
+// app sends the file in small pieces, in order:
+//   POST /api/uploads/chunked/start  { kind, size }   → { uploadId, chunkSize }
+//   PUT  /api/uploads/chunked/:id?offset=<bytes so far>   body: the piece (application/octet-stream)
+//   POST /api/uploads/chunked/:id/finish               → { url, type, size }  (checked like a normal upload)
+// A piece that arrives twice (a retry) is ignored. Unfinished uploads are deleted after 2 hours.
+
+const MEDIA_MAX = 200 * 1024 * 1024;
+const CHUNK_SIZE = 4 * 1024 * 1024;
+const sessions = new Map(); // uploadId → { userId, folder, path, size, received, touched }
+
+setInterval(() => {
+  const old = Date.now() - 2 * 60 * 60 * 1000;
+  for (const [id, s] of sessions) {
+    if (s.touched < old) { sessions.delete(id); void unlink(s.path).catch(() => {}); }
+  }
+}, 10 * 60 * 1000).unref();
+
+function sessionFor(req) {
+  const s = sessions.get(req.params.id);
+  if (!s || s.userId !== req.user.id) throw new HttpError(404, 'Upload not found. Please start again.', 'upload_not_found');
+  s.touched = Date.now();
+  return s;
+}
+
+uploadsRouter.post('/chunked/start', requireRole('admin'), async (req, res) => {
+  const kind = readKind(req.body?.kind);
+  const size = v.number(req.body?.size, 'size', { min: 1, max: Number.MAX_SAFE_INTEGER, integer: true });
+  if (size > MEDIA_MAX) {
+    throw new HttpError(413, `This file is ${Math.round(size / 1024 / 1024)} MB. The limit is 200 MB — trim the video or use a YouTube link.`, 'file_too_large');
+  }
+  const id = randomUUID();
+  const tmp = path.join(TMP_DIR, `chunked-${id}`);
+  await (await open(tmp, 'w')).close();
+  sessions.set(id, { userId: req.user.id, folder: MEDIA_FOLDERS[kind], path: tmp, size, received: 0, touched: Date.now() });
+  res.status(201).json({ uploadId: id, chunkSize: CHUNK_SIZE });
+});
+
+uploadsRouter.put('/chunked/:id', requireRole('admin'),
+  express.raw({ type: 'application/octet-stream', limit: CHUNK_SIZE + 1024 * 1024 }),
+  async (req, res) => {
+    const s = sessionFor(req);
+    const offset = v.number(Number(req.query.offset), 'offset', { min: 0, max: s.size, integer: true });
+    const piece = Buffer.isBuffer(req.body) ? req.body : Buffer.alloc(0);
+    if (offset + piece.length <= s.received) return res.json({ received: s.received }); // a repeated piece
+    if (offset !== s.received) {
+      throw new HttpError(409, 'Pieces arrived out of order.', 'wrong_offset');
+    }
+    if (s.received + piece.length > s.size) throw badRequest('More data than the file size.', 'too_much_data');
+    await appendFile(s.path, piece);
+    s.received += piece.length;
+    res.json({ received: s.received });
+  });
+
+uploadsRouter.post('/chunked/:id/finish', requireRole('admin'), async (req, res) => {
+  const s = sessionFor(req);
+  if (s.received !== s.size) throw badRequest(`Upload not complete (${s.received} of ${s.size} bytes).`, 'upload_incomplete');
+  sessions.delete(req.params.id);
+  res.status(201).json(await storeFile(req, s.path, s.size, s.folder, ['video', 'image']));
 });

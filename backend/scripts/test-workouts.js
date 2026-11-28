@@ -137,6 +137,40 @@ async function run() {
   const undone = await api('PATCH', `/api/workouts/${workoutId}/items/${itemId}`, { token: user.token, body: { done: false } });
   check('User can undo', undone.data?.workout?.completed === false, undone.data);
 
+  // ── Uploading a large video in pieces ─────────────────────────────────────
+  console.log('Uploading in pieces');
+  const size = 9 * 1024 * 1024 + 123; // 3 pieces of up to 4 MB
+  const file = Buffer.alloc(size, 7);
+  file.write('ftypisom', 4, 'latin1'); // looks like an MP4
+  const startUp = await api('POST', '/api/uploads/chunked/start', { token: admin.token, body: { kind: 'workouts', size } });
+  check('Admin starts an upload', startUp.status === 201 && !!startUp.data.uploadId, startUp);
+  check('Trainer cannot upload → 403', (await api('POST', '/api/uploads/chunked/start', {
+    token: trainer.token, body: { kind: 'workouts', size } })).status === 403);
+  check('over 200 MB refused with a clear message → 413', (await api('POST', '/api/uploads/chunked/start', {
+    token: admin.token, body: { kind: 'workouts', size: 300 * 1024 * 1024 } })).data?.code === 'file_too_large');
+  const id = startUp.data?.uploadId;
+  const chunk = startUp.data?.chunkSize;
+  const put = (offset, piece, token = admin.token) => fetch(`${base}/api/uploads/chunked/${id}?offset=${offset}`, {
+    method: 'PUT', headers: { authorization: `Bearer ${token}`, 'content-type': 'application/octet-stream' }, body: piece,
+  });
+  check('finishing too early refused → 400', (await api('POST', `/api/uploads/chunked/${id}/finish`, { token: admin.token })).data?.code === 'upload_incomplete');
+  check('another admin cannot add to it → 404', (await put(0, file.subarray(0, chunk), sa.token)).status === 404);
+  check('first piece accepted', (await put(0, file.subarray(0, chunk))).status === 200);
+  check('the same piece again (a retry) is fine', (await put(0, file.subarray(0, chunk))).status === 200);
+  check('a piece out of order → 409', (await put(chunk * 2, file.subarray(chunk * 2))).status === 409);
+  for (let off = chunk; off < size; off += chunk) await put(off, file.subarray(off, off + chunk));
+  const finished = await api('POST', `/api/uploads/chunked/${id}/finish`, { token: admin.token });
+  check('upload finishes with the video address', finished.status === 201 && finished.data.type === 'video' && finished.data.size === size
+    && finished.data.url.includes('/uploads/workout_videos/'), finished.data);
+  const served = finished.data?.url ? await fetch(finished.data.url.replace(/^https?:\/\/[^/]+/, base)) : null;
+  check('…and the whole file is there', served?.status === 200 && Number(served.headers.get('content-length')) === size);
+  if (finished.data?.url) {
+    const { unlink } = await import('node:fs/promises');
+    const { config } = await import('../src/config.js');
+    await unlink(`${config.uploadDir}/${finished.data.url.split('/uploads/')[1]}`).catch(() => {});
+  }
+  check('upload id cannot be used again → 404', (await api('POST', `/api/uploads/chunked/${id}/finish`, { token: admin.token })).status === 404);
+
   // ── Deleting ──────────────────────────────────────────────────────────────
   console.log('Deleting');
   check('Trainer cannot delete a library video → 403', (await api('DELETE', `/api/library/videos/${videoId}`, { token: trainer.token })).status === 403);

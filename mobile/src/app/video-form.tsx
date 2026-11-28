@@ -56,6 +56,7 @@ function VideoForm({ categories, video }: { categories: Category[]; video: Worko
   const [equipment, setEquipment] = useState(video?.equipment ?? '');
   const [description, setDescription] = useState(video?.description ?? '');
   const [uploading, setUploading] = useState<'video' | 'cover' | null>(null);
+  const [progress, setProgress] = useState(0);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -76,8 +77,9 @@ function VideoForm({ categories, video }: { categories: Category[]; video: Worko
     if (res.canceled || !res.assets[0]) return;
     const asset = res.assets[0];
     setUploading(kind);
+    setProgress(0);
     try {
-      const url = await uploadFile(asset);
+      const url = await uploadFile(asset, 'workouts', setProgress);
       if (kind === 'video') {
         setFileUrl(url);
         setFileName(asset.fileName ?? 'Video uploaded');
@@ -142,8 +144,18 @@ function VideoForm({ categories, video }: { categories: Category[]; video: Worko
           <>
             <UploadBox icon="film-outline" label={fileUrl ? (fileName ?? 'Video uploaded') : 'Choose a video'}
               detail={fileUrl ? 'Tap to replace the video' : 'From your gallery or computer · up to 200 MB'}
-              done={!!fileUrl} busy={uploading === 'video'} onPress={() => pick('video')} />
-            {uploading === 'video' && <Text style={{ color: p.textSecondary, fontSize: 12.5 }}>Uploading… large videos can take a few minutes. Keep this screen open.</Text>}
+              done={!!fileUrl} busy={uploading === 'video'} onPress={() => pick('video')}
+              busyText={`Uploading… ${Math.round(progress * 100)}%`} />
+            {uploading === 'video' && (
+              <View style={{ gap: 6 }}>
+                <View style={{ height: 8, borderRadius: 4, backgroundColor: p.elevated, overflow: 'hidden' }}>
+                  <View style={{ height: 8, width: `${Math.round(progress * 100)}%`, backgroundColor: p.accent }} />
+                </View>
+                <Text style={{ color: p.textSecondary, fontSize: 12.5 }}>
+                  Uploading… {Math.round(progress * 100)}% · keep this screen open. Wi-Fi is fastest; on mobile data it keeps going if the signal drops briefly.
+                </Text>
+              </View>
+            )}
             <UploadBox icon="image-outline" label={cover ? 'Cover picture added' : 'Add a cover picture (optional)'}
               detail="Shown on the video card" done={!!cover} busy={uploading === 'cover'} onPress={() => pick('cover')} />
             {cover && <Image source={{ uri: cover }} style={{ width: '100%', aspectRatio: 16 / 9, borderRadius: 14 }} contentFit="cover" />}
@@ -188,8 +200,8 @@ function Label({ text }: { text: string }) {
   return <Text style={{ color: p.textSecondary, fontSize: 12.5, fontWeight: '700', letterSpacing: 0.3 }}>{text}</Text>;
 }
 
-function UploadBox({ icon, label, detail, done, busy, onPress }: {
-  icon: 'film-outline' | 'image-outline'; label: string; detail: string; done: boolean; busy: boolean; onPress: () => void;
+function UploadBox({ icon, label, detail, done, busy, onPress, busyText = 'Uploading…' }: {
+  icon: 'film-outline' | 'image-outline'; label: string; detail: string; done: boolean; busy: boolean; onPress: () => void; busyText?: string;
 }) {
   return (
     <Pressable onPress={onPress} disabled={busy} accessibilityRole="button"
@@ -201,7 +213,7 @@ function UploadBox({ icon, label, detail, done, busy, onPress }: {
         <Ionicons name={busy ? 'cloud-upload-outline' : done ? 'checkmark' : icon} size={22} color={p.accent} />
       </View>
       <View style={{ flex: 1 }}>
-        <Text style={{ color: p.text, fontSize: 15, fontWeight: '700' }} numberOfLines={1}>{busy ? 'Uploading…' : label}</Text>
+        <Text style={{ color: p.text, fontSize: 15, fontWeight: '700' }} numberOfLines={1}>{busy ? busyText : label}</Text>
         <Text style={{ color: p.textSecondary, fontSize: 12.5 }}>{detail}</Text>
       </View>
     </Pressable>
