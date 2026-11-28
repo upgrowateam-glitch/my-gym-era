@@ -44,7 +44,7 @@ export function FoodPicture({ p, name, category, imageUrl, size = 46 }: {
 }) {
   return (
     <View style={{ width: size, height: size, borderRadius: size * 0.26, backgroundColor: p.accent + '1A', overflow: 'hidden', alignItems: 'center', justifyContent: 'center' }}>
-      {imageUrl ? <Image source={{ uri: imageUrl }} style={{ width: size, height: size }} contentFit="cover" />
+      {imageUrl ? <Image source={{ uri: imageUrl }} style={{ width: size, height: size }} contentFit="cover" transition={120} cachePolicy="memory-disk" recyclingKey={imageUrl} />
         : <Text style={{ fontSize: size * 0.52 }}>{foodEmoji(name, category)}</Text>}
     </View>
   );
@@ -111,7 +111,7 @@ export function PlanItemRow({ p, item }: { p: Palette; item: PlanItem }) {
   return (
     <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12, paddingVertical: 8 }}>
       <View style={{ alignItems: 'center', gap: 4 }}>
-        <FoodPicture p={p} name={item.name} size={40} />
+        <FoodPicture p={p} name={item.name} imageUrl={item.imageUrl} size={40} />
         <View style={{ minWidth: 40, paddingHorizontal: 6, paddingVertical: 2, borderRadius: 8, backgroundColor: p.accent + '22', alignItems: 'center' }}>
           <Text style={{ color: p.accent, fontWeight: '800', fontSize: 12.5 }}>×{servingsText(item.servings)}</Text>
         </View>

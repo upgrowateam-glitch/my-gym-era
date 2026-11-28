@@ -1,0 +1,530 @@
+[
+ {
+  "food": "White rice, cooked",
+  "file": "white-rice-cooked.jpg",
+  "title": "Meshi_001.jpg",
+  "author": "Ocdp",
+  "license": "CC0",
+  "source": "https://commons.wikimedia.org/wiki/File:Meshi_001.jpg"
+ },
+ {
+  "food": "Brown rice, cooked",
+  "file": "brown-rice-cooked.jpg",
+  "title": "Reis_-_Sorte_C_voll.jpg",
+  "author": "Unknown",
+  "license": "CC BY-SA 2.0 de",
+  "source": "https://commons.wikimedia.org/wiki/File:Reis_-_Sorte_C_voll.jpg"
+ },
+ {
+  "food": "Chapati / roti (no ghee)",
+  "file": "chapati-roti-no-ghee.jpg",
+  "title": "2_Chapati_warm_and_ready_to_be_eaten.jpg",
+  "author": "KittyKaht from Hong Kong, Hong Kong",
+  "license": "CC BY-SA 2.0",
+  "source": "https://commons.wikimedia.org/wiki/File:2_Chapati_warm_and_ready_to_be_eaten.jpg"
+ },
+ {
+  "food": "Oats, dry",
+  "file": "oats-dry.jpg",
+  "title": "Rolled_oats.jpg",
+  "author": "en:user:Hankwang",
+  "license": "Public domain",
+  "source": "https://commons.wikimedia.org/wiki/File:Rolled_oats.jpg"
+ },
+ {
+  "food": "Poha (flattened rice), dry",
+  "file": "poha-flattened-rice-dry.jpg",
+  "title": "Poha.jpg",
+  "author": "Sanjay Acharya, aka Sanjay ach at en.wikipedia",
+  "license": "CC BY-SA 3.0",
+  "source": "https://commons.wikimedia.org/wiki/File:Poha.jpg"
+ },
+ {
+  "food": "Idli",
+  "file": "idli.jpg",
+  "title": "Idli_Sambar.JPG",
+  "author": "Soumya dey at English Wikipedia",
+  "license": "CC BY-SA 3.0",
+  "source": "https://commons.wikimedia.org/wiki/File:Idli_Sambar.JPG"
+ },
+ {
+  "food": "Whole wheat bread",
+  "file": "whole-wheat-bread.jpg",
+  "title": "Vegan_no-knead_whole_wheat_bread_loaf,_September_2010.jpg",
+  "author": "Veganbaking.net",
+  "license": "CC BY-SA 2.0",
+  "source": "https://commons.wikimedia.org/wiki/File:Vegan_no-knead_whole_wheat_bread_loaf,_September_2010.jpg"
+ },
+ {
+  "food": "White bread",
+  "file": "white-bread.jpg",
+  "title": "Weißbrot-1.jpg",
+  "author": "Rainer Zenz",
+  "license": "CC BY-SA 3.0",
+  "source": "https://commons.wikimedia.org/wiki/File:Wei%C3%9Fbrot-1.jpg"
+ },
+ {
+  "food": "Quinoa, cooked",
+  "file": "quinoa-cooked.jpg",
+  "title": "Liat Portal for Foodie Disorder - Quinoa, Schnitzel and Israeli Salad.jpg",
+  "author": "HaJunkiyada",
+  "license": "CC BY-SA 4.0",
+  "source": "https://commons.wikimedia.org/wiki/File:Liat_Portal_for_Foodie_Disorder_-_Quinoa,_Schnitzel_and_Israeli_Salad.jpg"
+ },
+ {
+  "food": "Lentil dal, cooked (no oil)",
+  "file": "lentil-dal-cooked-no-oil.jpg",
+  "title": "North Indian vegetarian meal with yellow dal tadka, butter naan, and green chutney in a restaurant in Paris, France.jpg",
+  "author": "Dev Jadiya",
+  "license": "CC BY-SA 4.0",
+  "source": "https://commons.wikimedia.org/wiki/File:North_Indian_vegetarian_meal_with_yellow_dal_tadka,_butter_naan,_and_green_chutney_in_a_restaurant_in_Paris,_France.jpg"
+ },
+ {
+  "food": "Rajma (kidney beans), cooked",
+  "file": "rajma-kidney-beans-cooked.jpg",
+  "title": "Rajma_Masala_(32081557778).jpg",
+  "author": "Gaurav Nemade",
+  "license": "CC BY-SA 2.0",
+  "source": "https://commons.wikimedia.org/wiki/File:Rajma_Masala_(32081557778).jpg"
+ },
+ {
+  "food": "Chickpeas (chana), cooked",
+  "file": "chickpeas-chana-cooked.jpg",
+  "title": "Chana_masala.jpg",
+  "author": "Simon Law (sfllaw) from Montréal, QC, Canada",
+  "license": "CC BY-SA 2.0",
+  "source": "https://commons.wikimedia.org/wiki/File:Chana_masala.jpg"
+ },
+ {
+  "food": "Moong sprouts",
+  "file": "moong-sprouts.jpg",
+  "title": "Organic_mixed_beans_shoots.jpg",
+  "author": "Unknown",
+  "license": "CC BY-SA 3.0",
+  "source": "https://commons.wikimedia.org/wiki/File:Organic_mixed_beans_shoots.jpg"
+ },
+ {
+  "food": "Soya chunks, dry",
+  "file": "soya-chunks-dry.jpg",
+  "title": "Textured_vegetable_protein.jpg",
+  "author": "No machine-readable author provided. Polyparadigm~commonswiki assumed (based on copyright claims).",
+  "license": "Public domain",
+  "source": "https://commons.wikimedia.org/wiki/File:Textured_vegetable_protein.jpg"
+ },
+ {
+  "food": "Tofu, firm",
+  "file": "tofu-firm.jpg",
+  "title": "Japanese_SilkyTofu_(Kinugoshi_Tofu).JPG",
+  "author": "DryPot",
+  "license": "CC BY-SA 3.0",
+  "source": "https://commons.wikimedia.org/wiki/File:Japanese_SilkyTofu_(Kinugoshi_Tofu).JPG"
+ },
+ {
+  "food": "Potato, boiled",
+  "file": "potato-boiled.jpg",
+  "title": "Boiled, floury potatoes (5299865427).jpg",
+  "author": "benjgibbs",
+  "license": "CC BY 2.0",
+  "source": "https://commons.wikimedia.org/wiki/File:Boiled,_floury_potatoes_(5299865427).jpg"
+ },
+ {
+  "food": "Sweet potato, boiled",
+  "file": "sweet-potato-boiled.jpg",
+  "title": "Ipomoea_batatas_006.JPG",
+  "author": "Llez",
+  "license": "CC BY-SA 3.0",
+  "source": "https://commons.wikimedia.org/wiki/File:Ipomoea_batatas_006.JPG"
+ },
+ {
+  "food": "Spinach, cooked",
+  "file": "spinach-cooked.jpg",
+  "title": "Spinach leaves.jpg",
+  "author": "Nillerdk",
+  "license": "CC BY 3.0",
+  "source": "https://commons.wikimedia.org/wiki/File:Spinach_leaves.jpg"
+ },
+ {
+  "food": "Broccoli, cooked",
+  "file": "broccoli-cooked.jpg",
+  "title": "Broccoli_and_cross_section_edit.jpg",
+  "author": "Fir0002",
+  "license": "GFDL 1.2",
+  "source": "https://commons.wikimedia.org/wiki/File:Broccoli_and_cross_section_edit.jpg"
+ },
+ {
+  "food": "Green peas, cooked",
+  "file": "green-peas-cooked.jpg",
+  "title": "Peas (484346231).jpg",
+  "author": "Ruth Hartnup from Vancouver, Canada",
+  "license": "CC BY 2.0",
+  "source": "https://commons.wikimedia.org/wiki/File:Peas_(484346231).jpg"
+ },
+ {
+  "food": "Cucumber",
+  "file": "cucumber.jpg",
+  "title": "ARS_cucumber.jpg",
+  "author": "Stephen Ausmus, USDA ARS",
+  "license": "Public domain",
+  "source": "https://commons.wikimedia.org/wiki/File:ARS_cucumber.jpg"
+ },
+ {
+  "food": "Tomato",
+  "file": "tomato.jpg",
+  "title": "Tomato_je.jpg",
+  "author": "Softeis",
+  "license": "CC BY-SA 3.0",
+  "source": "https://commons.wikimedia.org/wiki/File:Tomato_je.jpg"
+ },
+ {
+  "food": "Carrot",
+  "file": "carrot.jpg",
+  "title": "Vegetable-Carrot-Bundle-wStalks.jpg",
+  "author": "Evan-Amos",
+  "license": "Public domain",
+  "source": "https://commons.wikimedia.org/wiki/File:Vegetable-Carrot-Bundle-wStalks.jpg"
+ },
+ {
+  "food": "Banana",
+  "file": "banana.jpg",
+  "title": "Bananavarieties.jpg",
+  "author": "TimothyPilgrim",
+  "license": "CC BY-SA 3.0",
+  "source": "https://commons.wikimedia.org/wiki/File:Bananavarieties.jpg"
+ },
+ {
+  "food": "Apple",
+  "file": "apple.jpg",
+  "title": "Pink_lady_and_cross_section.jpg",
+  "author": "fir0002 flagstaffotos [at] gmail.com Canon 20D + Sigma 150mm f/2.8",
+  "license": "GFDL 1.2",
+  "source": "https://commons.wikimedia.org/wiki/File:Pink_lady_and_cross_section.jpg"
+ },
+ {
+  "food": "Orange",
+  "file": "orange.jpg",
+  "title": "Oranges_-_whole-halved-segment.jpg",
+  "author": "Ivar Leidus",
+  "license": "CC BY-SA 4.0",
+  "source": "https://commons.wikimedia.org/wiki/File:Oranges_-_whole-halved-segment.jpg"
+ },
+ {
+  "food": "Papaya",
+  "file": "papaya.jpg",
+  "title": "Fresh Cut Papaya With Zillions of Seeds (33812163615).jpg",
+  "author": "Chic Bee",
+  "license": "CC BY 2.0",
+  "source": "https://commons.wikimedia.org/wiki/File:Fresh_Cut_Papaya_With_Zillions_of_Seeds_(33812163615).jpg"
+ },
+ {
+  "food": "Mango",
+  "file": "mango.jpg",
+  "title": "Mangos_-_single_and_halved.jpg",
+  "author": "Ivar Leidus",
+  "license": "CC BY-SA 4.0",
+  "source": "https://commons.wikimedia.org/wiki/File:Mangos_-_single_and_halved.jpg"
+ },
+ {
+  "food": "Watermelon",
+  "file": "watermelon.jpg",
+  "title": "Slices of watermelon.jpg",
+  "author": "Funmoring46",
+  "license": "CC BY-SA 4.0",
+  "source": "https://commons.wikimedia.org/wiki/File:Slices_of_watermelon.jpg"
+ },
+ {
+  "food": "Grapes",
+  "file": "grapes.jpg",
+  "title": "Grapes,_Rostov-on-Don,_Russia.jpg",
+  "author": "Vyacheslav Argenberg",
+  "license": "CC BY 4.0",
+  "source": "https://commons.wikimedia.org/wiki/File:Grapes,_Rostov-on-Don,_Russia.jpg"
+ },
+ {
+  "food": "Guava",
+  "file": "guava.jpg",
+  "title": "Guava_pink_fruit.jpg",
+  "author": "Ivar Leidus",
+  "license": "CC BY-SA 4.0",
+  "source": "https://commons.wikimedia.org/wiki/File:Guava_pink_fruit.jpg"
+ },
+ {
+  "food": "Dates (Medjool)",
+  "file": "dates-medjool.jpg",
+  "title": "Świeży_daktyle_odmiany_MEDJOOL.jpg",
+  "author": "ORGANIChouse",
+  "license": "CC BY-SA 4.0",
+  "source": "https://commons.wikimedia.org/wiki/File:%C5%9Awie%C5%BCy_daktyle_odmiany_MEDJOOL.jpg"
+ },
+ {
+  "food": "Milk, whole",
+  "file": "milk-whole.jpg",
+  "title": "Glass_of_Milk_(33657535532).jpg",
+  "author": "NIAID",
+  "license": "CC BY 2.0",
+  "source": "https://commons.wikimedia.org/wiki/File:Glass_of_Milk_(33657535532).jpg"
+ },
+ {
+  "food": "Milk, skimmed",
+  "file": "milk-skimmed.jpg",
+  "title": "Skim_milk_poured_into_cereal_bowl.jpg",
+  "author": "Kim Piper Werker from Vancouver, BC, Canada",
+  "license": "CC BY-SA 2.0",
+  "source": "https://commons.wikimedia.org/wiki/File:Skim_milk_poured_into_cereal_bowl.jpg"
+ },
+ {
+  "food": "Curd / plain yogurt (whole milk)",
+  "file": "curd-plain-yogurt-whole-milk.jpg",
+  "title": "Joghurt.jpg",
+  "author": "No machine-readable author provided. Rainer Zenz assumed (based on copyright claims).",
+  "license": "CC BY-SA 3.0",
+  "source": "https://commons.wikimedia.org/wiki/File:Joghurt.jpg"
+ },
+ {
+  "food": "Greek yogurt, plain non-fat",
+  "file": "greek-yogurt-plain-non-fat.jpg",
+  "title": "Labneh01.jpg",
+  "author": "No machine-readable author provided. Omernos~commonswiki assumed (based on copyright claims).",
+  "license": "Public domain",
+  "source": "https://commons.wikimedia.org/wiki/File:Labneh01.jpg"
+ },
+ {
+  "food": "Paneer",
+  "file": "paneer.jpg",
+  "title": "Panir_Paneer_Indian_cheese_fresh.jpg",
+  "author": "Sonja Pauen - Stanhopea",
+  "license": "CC BY 2.0 de",
+  "source": "https://commons.wikimedia.org/wiki/File:Panir_Paneer_Indian_cheese_fresh.jpg"
+ },
+ {
+  "food": "Cheddar cheese",
+  "file": "cheddar-cheese.jpg",
+  "title": "Somerset-Cheddar.jpg",
+  "author": "J.P.Lon",
+  "license": "CC BY-SA 3.0",
+  "source": "https://commons.wikimedia.org/wiki/File:Somerset-Cheddar.jpg"
+ },
+ {
+  "food": "Buttermilk, low-fat",
+  "file": "buttermilk-low-fat.jpg",
+  "title": "Buttermilk-(right)-and-Milk-(left).jpg",
+  "author": "Ukko-wc",
+  "license": "CC BY-SA 3.0",
+  "source": "https://commons.wikimedia.org/wiki/File:Buttermilk-(right)-and-Milk-(left).jpg"
+ },
+ {
+  "food": "Egg, whole (boiled)",
+  "file": "egg-whole-boiled.jpg",
+  "title": "Soft-boiled-egg.jpg",
+  "author": "Amin",
+  "license": "CC BY-SA 4.0",
+  "source": "https://commons.wikimedia.org/wiki/File:Soft-boiled-egg.jpg"
+ },
+ {
+  "food": "Egg white",
+  "file": "egg-white.jpg",
+  "title": "Chicken_egg01_monovular.jpg",
+  "author": "miya",
+  "license": "CC BY 3.0",
+  "source": "https://commons.wikimedia.org/wiki/File:Chicken_egg01_monovular.jpg"
+ },
+ {
+  "food": "Chicken breast, cooked (skinless)",
+  "file": "chicken-breast-cooked-skinless.jpg",
+  "title": "Grilled Chicken Breasts (28905381261).jpg",
+  "author": "Sharon Chen from Austin, United States",
+  "license": "CC BY 2.0",
+  "source": "https://commons.wikimedia.org/wiki/File:Grilled_Chicken_Breasts_(28905381261).jpg"
+ },
+ {
+  "food": "White fish (cod), cooked",
+  "file": "white-fish-cod-cooked.jpg",
+  "title": "Baked cod fillet.jpg",
+  "author": "Tiia Monto",
+  "license": "CC BY-SA 4.0",
+  "source": "https://commons.wikimedia.org/wiki/File:Baked_cod_fillet.jpg"
+ },
+ {
+  "food": "Salmon, cooked",
+  "file": "salmon-cooked.jpg",
+  "title": "Grilled plated salmon fillet.jpg",
+  "author": "DanaTentis",
+  "license": "CC0",
+  "source": "https://commons.wikimedia.org/wiki/File:Grilled_plated_salmon_fillet.jpg"
+ },
+ {
+  "food": "Mutton (goat), cooked",
+  "file": "mutton-goat-cooked.jpg",
+  "title": "Mutton curry (1).jpg",
+  "author": "Dolon Prova",
+  "license": "CC BY-SA 4.0",
+  "source": "https://commons.wikimedia.org/wiki/File:Mutton_curry_(1).jpg"
+ },
+ {
+  "food": "Prawns, cooked",
+  "file": "prawns-cooked.jpg",
+  "title": "Spicy_fried_King_Prawns.jpg",
+  "author": "rovingI",
+  "license": "CC BY 2.0",
+  "source": "https://commons.wikimedia.org/wiki/File:Spicy_fried_King_Prawns.jpg"
+ },
+ {
+  "food": "Tuna, canned in water",
+  "file": "tuna-canned-in-water.jpg",
+  "title": "Lata de atún-Albo.jpg",
+  "author": "Tamorlan",
+  "license": "CC BY 3.0",
+  "source": "https://commons.wikimedia.org/wiki/File:Lata_de_at%C3%BAn-Albo.jpg"
+ },
+ {
+  "food": "Almonds",
+  "file": "almonds.jpg",
+  "title": "Almonds_-_in_shell,_shell_cracked_open,_shelled,_blanched.jpg",
+  "author": "Ivar Leidus",
+  "license": "CC BY-SA 4.0",
+  "source": "https://commons.wikimedia.org/wiki/File:Almonds_-_in_shell,_shell_cracked_open,_shelled,_blanched.jpg"
+ },
+ {
+  "food": "Peanuts, roasted",
+  "file": "peanuts-roasted.jpg",
+  "title": "Roasted Peanuts with shell.jpg",
+  "author": "Sanjay Acharya",
+  "license": "CC BY-SA 4.0",
+  "source": "https://commons.wikimedia.org/wiki/File:Roasted_Peanuts_with_shell.jpg"
+ },
+ {
+  "food": "Peanut butter",
+  "file": "peanut-butter.jpg",
+  "title": "2020-03-24_20_57_22_An_open_jar_of_Skippy_Creamy_Peanut_Butter_in_the_Dulles_section_of_Sterling,_Loudoun_County,_Virginia.jpg",
+  "author": "Famartin",
+  "license": "CC BY-SA 4.0",
+  "source": "https://commons.wikimedia.org/wiki/File:2020-03-24_20_57_22_An_open_jar_of_Skippy_Creamy_Peanut_Butter_in_the_Dulles_section_of_Sterling,_Loudoun_County,_Virginia.jpg"
+ },
+ {
+  "food": "Walnuts",
+  "file": "walnuts.jpg",
+  "title": "Walnuts_-_whole_and_open_with_halved_kernel.jpg",
+  "author": "Ivar Leidus",
+  "license": "CC BY-SA 4.0",
+  "source": "https://commons.wikimedia.org/wiki/File:Walnuts_-_whole_and_open_with_halved_kernel.jpg"
+ },
+ {
+  "food": "Chia seeds",
+  "file": "chia-seeds.jpg",
+  "title": "Seed_of_chia_(Salvia_hispanica)Salvia_hispanica_group.jpg",
+  "author": "Keegan Fields",
+  "license": "CC BY-SA 4.0",
+  "source": "https://commons.wikimedia.org/wiki/File:Seed_of_chia_(Salvia_hispanica)Salvia_hispanica_group.jpg"
+ },
+ {
+  "food": "Flax seeds",
+  "file": "flax-seeds.jpg",
+  "title": "Brown Flax Seeds.jpg",
+  "author": "Sanjay Acharya",
+  "license": "CC BY-SA 3.0",
+  "source": "https://commons.wikimedia.org/wiki/File:Brown_Flax_Seeds.jpg"
+ },
+ {
+  "food": "Roasted chana (Bengal gram)",
+  "file": "roasted-chana-bengal-gram.jpg",
+  "title": "Leblebi.jpg",
+  "author": "Physicistjedi",
+  "license": "Public domain",
+  "source": "https://commons.wikimedia.org/wiki/File:Leblebi.jpg"
+ },
+ {
+  "food": "Makhana (fox nuts), roasted",
+  "file": "makhana-fox-nuts-roasted.jpg",
+  "title": "Foxnut Makhana - Nawada District - Bihar - 1.jpg",
+  "author": "FacetsOfNonStickPans",
+  "license": "CC BY-SA 4.0",
+  "source": "https://commons.wikimedia.org/wiki/File:Foxnut_Makhana_-_Nawada_District_-_Bihar_-_1.jpg"
+ },
+ {
+  "food": "Dark chocolate (70–85%)",
+  "file": "dark-chocolate-70-85.jpg",
+  "title": "Green_and_Black's_dark_chocolate_bar_2.jpg",
+  "author": "Mx. Granger",
+  "license": "CC0",
+  "source": "https://commons.wikimedia.org/wiki/File:Green_and_Black%27s_dark_chocolate_bar_2.jpg"
+ },
+ {
+  "food": "Popcorn, air-popped",
+  "file": "popcorn-air-popped.jpg",
+  "title": "Bowl of Popcorn (Unsplash).jpg",
+  "author": "Alex Munsell alexmunsell",
+  "license": "CC0",
+  "source": "https://commons.wikimedia.org/wiki/File:Bowl_of_Popcorn_(Unsplash).jpg"
+ },
+ {
+  "food": "Black coffee",
+  "file": "black-coffee.jpg",
+  "title": "Latte_and_dark_coffee.jpg",
+  "author": "Bex Walton",
+  "license": "CC BY 2.0",
+  "source": "https://commons.wikimedia.org/wiki/File:Latte_and_dark_coffee.jpg"
+ },
+ {
+  "food": "Green tea",
+  "file": "green-tea.jpg",
+  "title": "Green_tea_3_appearances.jpg",
+  "author": "Alessandro Martini",
+  "license": "CC0",
+  "source": "https://commons.wikimedia.org/wiki/File:Green_tea_3_appearances.jpg"
+ },
+ {
+  "food": "Coconut water",
+  "file": "coconut-water.jpg",
+  "title": "Young_Coconut_Drink.jpg",
+  "author": "Shameelnurani313",
+  "license": "CC BY-SA 4.0",
+  "source": "https://commons.wikimedia.org/wiki/File:Young_Coconut_Drink.jpg"
+ },
+ {
+  "food": "Orange juice, fresh",
+  "file": "orange-juice-fresh.jpg",
+  "title": "Orangejuice.jpg",
+  "author": "rawpixel.com",
+  "license": "CC0",
+  "source": "https://commons.wikimedia.org/wiki/File:Orangejuice.jpg"
+ },
+ {
+  "food": "Whey protein (check your brand's label)",
+  "file": "whey-protein-check-your-brand-s-label.jpg",
+  "title": "Chocolate Pea Protein Powder.jpg",
+  "author": "Em87128712",
+  "license": "CC BY-SA 4.0",
+  "source": "https://commons.wikimedia.org/wiki/File:Chocolate_Pea_Protein_Powder.jpg"
+ },
+ {
+  "food": "Ghee",
+  "file": "ghee.jpg",
+  "title": "Food_Fair_(2025)_11.jpg",
+  "author": "Gpkp",
+  "license": "CC BY-SA 4.0",
+  "source": "https://commons.wikimedia.org/wiki/File:Food_Fair_(2025)_11.jpg"
+ },
+ {
+  "food": "Butter",
+  "file": "butter.jpg",
+  "title": "Švédský_koláč_naruby_904_(cropped).JPG",
+  "author": "Matěj Baťha",
+  "license": "CC BY-SA 3.0",
+  "source": "https://commons.wikimedia.org/wiki/File:%C5%A0v%C3%A9dsk%C3%BD_kol%C3%A1%C4%8D_naruby_904_(cropped).JPG"
+ },
+ {
+  "food": "Olive oil",
+  "file": "olive-oil.jpg",
+  "title": "Oliven_V1.jpg",
+  "author": "Poyraz 72",
+  "license": "CC BY-SA 4.0",
+  "source": "https://commons.wikimedia.org/wiki/File:Oliven_V1.jpg"
+ },
+ {
+  "food": "Cooking oil (vegetable)",
+  "file": "cooking-oil-vegetable.jpg",
+  "title": "Olive_oil_from_Oneglia.jpg",
+  "author": "Lemone",
+  "license": "CC BY-SA 4.0",
+  "source": "https://commons.wikimedia.org/wiki/File:Olive_oil_from_Oneglia.jpg"
+ }
+]

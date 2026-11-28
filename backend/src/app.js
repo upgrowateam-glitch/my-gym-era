@@ -1,4 +1,5 @@
 import express from 'express';
+import { fileURLToPath } from 'node:url';
 import cors from 'cors';
 import { query } from './db.js';
 import { authRouter } from './routes/auth.js';
@@ -48,6 +49,13 @@ export function createApp() {
   app.use('/api/library', libraryRouter);
   app.use('/api/workouts', workoutsRouter);
   app.use('/api/nutrition', nutritionRouter);
+
+  // Photos for the starter food list ship with the server (backend/static/starter-foods).
+  app.use('/uploads/starter-foods', express.static(fileURLToPath(new URL('../static/starter-foods', import.meta.url)), {
+    index: false,
+    dotfiles: 'ignore',
+    setHeaders: (res) => res.set('Cache-Control', 'public, max-age=2592000'),
+  }));
 
   // Uploaded files. Names are random UUIDs; dot-folders (the temp folder) are never served.
   app.use('/uploads', express.static(config.uploadDir, {

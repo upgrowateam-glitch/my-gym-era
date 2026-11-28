@@ -57,6 +57,14 @@ async function run() {
   const rice = starter.data?.foods?.find((f) => f.name === 'White rice, cooked');
   check('starter foods are there (with numbers, not text)', starter.status === 200 && starter.data.foods.length >= 60
     && rice?.calories === 205 && rice.protein === 4.3 && rice.servingSize === '1 cup (158 g)', rice);
+  check('starter foods have a full photo address', rice?.imageUrl === `${base}/uploads/starter-foods/white-rice-cooked.jpg`, rice?.imageUrl);
+  check('every starter food has a photo', starter.data?.foods?.filter((f) => f.imageUrl?.includes('/uploads/starter-foods/')).length >= 66);
+  const photo = await fetch(rice.imageUrl);
+  check('the photo loads (JPEG, cached)', photo.status === 200 && photo.headers.get('content-type') === 'image/jpeg'
+    && /max-age/.test(photo.headers.get('cache-control') ?? ''), { status: photo.status, type: photo.headers.get('content-type') });
+  const credits = await api('GET', '/api/nutrition/photo-credits', { token: user.token });
+  check('photo credits list (author + license for each photo)', credits.data?.credits?.length >= 66
+    && credits.data.credits.every((c) => c.author && c.license && c.source?.startsWith('https://commons.wikimedia.org/')), credits.data?.credits?.[0]);
 
   // ── Categories ────────────────────────────────────────────────────────────
   console.log('Categories');

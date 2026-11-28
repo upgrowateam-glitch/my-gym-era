@@ -36,6 +36,8 @@ export interface PlanItem {
   protein: number;
   carbs: number;
   fat: number;
+  /** The food's current photo (null if none / food deleted). */
+  imageUrl?: string | null;
 }
 
 export interface Macros { calories: number; protein: number; carbs: number; fat: number }
@@ -90,12 +92,16 @@ export function totalOf(items: { servings: number; calories: number; protein: nu
 
 // ── Server calls ────────────────────────────────────────────────────────────
 
+/** Last loaded food list and categories, so opening a food is instant. */
+export const foodCache: { foods: Food[] | null; categories: FoodCategory[] | null } = { foods: null, categories: null };
+
 export const foodsApi = {
-  categories: () => api.get<{ categories: FoodCategory[] }>('/api/nutrition/categories').then((r) => r.categories),
+  categories: () => api.get<{ categories: FoodCategory[] }>('/api/nutrition/categories').then((r) => (foodCache.categories = r.categories)),
   addCategory: (name: string) => api.post<{ category: FoodCategory }>('/api/nutrition/categories', { name }),
   renameCategory: (id: string, name: string) => api.patch<{ category: FoodCategory }>(`/api/nutrition/categories/${id}`, { name }),
   deleteCategory: (id: string) => api.delete<{ ok: true }>(`/api/nutrition/categories/${id}`),
-  foods: () => api.get<{ foods: Food[] }>('/api/nutrition/foods').then((r) => r.foods),
+  foods: () => api.get<{ foods: Food[] }>('/api/nutrition/foods').then((r) => (foodCache.foods = r.foods)),
+  photoCredits: () => api.get<{ credits: { food: string; author: string; license: string; source: string }[] }>('/api/nutrition/photo-credits').then((r) => r.credits),
   food: (id: string) => api.get<{ food: Food }>(`/api/nutrition/foods/${id}`).then((r) => r.food),
   saveFood: (id: string | null, food: object) => (id
     ? api.put<{ food: Food }>(`/api/nutrition/foods/${id}`, { food })

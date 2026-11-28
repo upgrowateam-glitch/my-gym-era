@@ -2,14 +2,16 @@
 // Values are for ONE serving: calories, protein, carbohydrates and fat.
 
 import { useState } from 'react';
-import { Text, View } from 'react-native';
+import { Pressable, Text, View } from 'react-native';
+import { Image } from 'expo-image';
+import { Ionicons } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
 import { router, useLocalSearchParams } from 'expo-router';
 import { ApiError } from '@/lib/api';
 import { useApi } from '@/lib/useApi';
 import { confirm } from '@/lib/confirm';
 import { uploadFile } from '@/lib/workouts';
-import { FOOD_DIETS, foodsApi, round1, type Food, type FoodCategory, type FoodDiet } from '@/lib/nutrition';
+import { FOOD_DIETS, foodCache, foodsApi, round1, type Food, type FoodCategory, type FoodDiet } from '@/lib/nutrition';
 import { RequireRole } from '@/components/RequireRole';
 import { BackPage } from '@/components/staff/BackPage';
 import { Button, Card, Chips, Field, Notice } from '@/components/ui/UI';
@@ -27,14 +29,25 @@ export default function FoodFormRoute() {
 
 function FoodFormPage() {
   const { id } = useLocalSearchParams<{ id?: string }>();
-  const data = useApi(async () => ({ categories: await foodsApi.categories(), food: id ? await foodsApi.food(id) : null }));
+  // Opened from the food list: everything is already loaded, so show it at once.
+  const cachedFood = id ? foodCache.foods?.find((f) => f.id === id) ?? null : null;
+  const instant = foodCache.categories && (!id || cachedFood);
   return (
     <BackPage p={p} kicker="FOODS & NUTRITION" title={id ? 'Edit food' : 'Add food'} maxWidth={720}>
-      {data.error && <Notice text={data.error} />}
-      {!data.data && !data.error && <Loading />}
-      {data.data && <FoodForm categories={data.data.categories} food={data.data.food} />}
+      {instant ? <FoodForm categories={foodCache.categories!} food={cachedFood} /> : <LoadThenForm id={id} />}
     </BackPage>
   );
+}
+
+/** Opened directly (no list loaded yet): load both at the same time. */
+function LoadThenForm({ id }: { id?: string }) {
+  const data = useApi(async () => {
+    const [categories, food] = await Promise.all([foodsApi.categories(), id ? foodsApi.food(id) : Promise.resolve(null)]);
+    return { categories, food };
+  });
+  if (data.error) return <Notice text={data.error} />;
+  if (!data.data) return <Loading />;
+  return <FoodForm categories={data.data.categories} food={data.data.food} />;
 }
 
 const numText = (n: number | undefined) => (n === undefined ? '' : String(n));
@@ -110,8 +123,34 @@ function FoodForm({ categories, food }: { categories: FoodCategory[]; food: Food
     }
   }
 
+  const categoryName = categories.find((c) => c.id === categoryId)?.name;
   return (
     <View style={{ gap: 16 }}>
+      {/* The food's picture, big at the top. Tap it to add or change the photo. */}
+      <Pressable onPress={pickPhoto} disabled={uploading} accessibilityRole="button" accessibilityLabel={image ? 'Change photo' : 'Add a photo'}
+        style={{ borderRadius: 20, overflow: 'hidden', borderWidth: 1, borderColor: p.border, backgroundColor: p.accent + '14' }}>
+        {image ? (
+          <Image source={{ uri: image }} style={{ width: '100%', aspectRatio: 16 / 10 }} contentFit="cover" transition={150} cachePolicy="memory-disk" />
+        ) : (
+          <View style={{ width: '100%', aspectRatio: 16 / 10, alignItems: 'center', justifyContent: 'center', gap: 8 }}>
+            <FoodPicture p={p} name={name || 'Food'} category={categoryName} size={96} />
+            <Text style={{ color: p.textSecondary, fontSize: 13.5 }}>No photo yet — tap to add one</Text>
+          </View>
+        )}
+        <View style={{ position: 'absolute', right: 12, bottom: 12, flexDirection: 'row', gap: 8 }}>
+          {image && (
+            <Pressable onPress={() => setImage(null)} accessibilityLabel="Remove photo"
+              style={{ paddingHorizontal: 12, height: 36, borderRadius: 18, alignItems: 'center', justifyContent: 'center', backgroundColor: 'rgba(0,0,0,0.65)' }}>
+              <Text style={{ color: '#fff', fontWeight: '700', fontSize: 13 }}>Remove</Text>
+            </Pressable>
+          )}
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, paddingHorizontal: 12, height: 36, borderRadius: 18, backgroundColor: p.accent }}>
+            <Ionicons name={uploading ? 'cloud-upload-outline' : 'camera-outline'} size={16} color={p.onAccent} />
+            <Text style={{ color: p.onAccent, fontWeight: '800', fontSize: 13 }}>{uploading ? 'Uploading…' : image ? 'Change photo' : 'Add photo'}</Text>
+          </View>
+        </View>
+      </Pressable>
+
       <Card p={p} style={{ gap: 14 }}>
         <Field p={p} label="Food name" icon="nutrition-outline" value={name} onChangeText={setName} placeholder="e.g. Upma" maxLength={100} />
         <Label text="Category" />
@@ -142,13 +181,6 @@ function FoodForm({ categories, food }: { categories: FoodCategory[]; food: Food
       <Card p={p} style={{ gap: 14 }}>
         <Label text="Food type (optional)" />
         <Chips p={p} value={diet} onChange={setDiet} options={[{ value: 'none' as const, label: 'Not set' }, ...FOOD_DIETS.map((d) => ({ value: d.value, label: d.label }))]} />
-        <Label text="Picture (optional photo; without one, a matching food emoji is shown)" />
-        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
-          <FoodPicture p={p} name={name || 'Food'} category={categories.find((c) => c.id === categoryId)?.name} imageUrl={image} size={72} />
-          <Button p={p} kind="outline" label={uploading ? 'Uploading…' : image ? 'Change photo' : 'Add a photo'} icon="image-outline"
-            loading={uploading} onPress={pickPhoto} />
-          {image && <Button p={p} kind="outline" label="Remove" icon="close" onPress={() => setImage(null)} />}
-        </View>
       </Card>
 
       {error && <Notice text={error} />}

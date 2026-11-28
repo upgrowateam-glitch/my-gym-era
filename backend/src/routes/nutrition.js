@@ -24,6 +24,12 @@ import { requireAuth, requireRole } from '../middleware/auth.js';
 import { badRequest, conflict, forbidden, notFound } from '../errors.js';
 import { USER_COLUMNS, isStaffFor } from '../users/userModel.js';
 import * as v from '../validate.js';
+import { config } from '../config.js';
+import { readFileSync } from 'node:fs';
+
+// Starter food photos are stored as "/uploads/..." paths: add this server's address.
+const baseOf = (req) => config.publicBaseUrl ?? `${req.protocol}://${req.get('host')}`;
+const fullUrl = (url, base) => (url && url.startsWith('/') ? base + url : url);
 
 export const MEALS = ['breakfast', 'mid_morning', 'lunch', 'pre_workout', 'post_workout', 'evening_snack', 'dinner'];
 export const DIET_TYPES = ['vegan', 'veg', 'egg', 'non_veg'];
@@ -33,6 +39,14 @@ nutritionRouter.use(requireAuth);
 
 const staffOnly = requireRole('admin', 'trainer');
 const round1 = (n) => Math.round(n * 10) / 10;
+
+// ── Photo credits ───────────────────────────────────────────────────────────
+// The starter food photos are free-licensed; their licenses ask us to name the
+// photographer. Anyone signed in can see this list.
+const CREDITS = JSON.parse(readFileSync(new URL('../../static/starter-foods/credits.json', import.meta.url), 'utf8'));
+nutritionRouter.get('/photo-credits', (_req, res) => {
+  res.json({ credits: CREDITS.map(({ food, author, license, source }) => ({ food, author, license, source })) });
+});
 
 // ── Categories ──────────────────────────────────────────────────────────────
 
@@ -85,7 +99,7 @@ const FOOD_SELECT = `SELECT f.id, f.category_id, fc.name AS category_name, f.nam
   f.carbs_g, f.fat_g, f.diet_type, f.image_url, f.created_at, f.updated_at
   FROM foods f JOIN food_categories fc ON fc.id = f.category_id`;
 
-const toFood = (r) => ({
+const toFood = (r, base) => ({
   id: r.id,
   categoryId: r.category_id,
   categoryName: r.category_name,
@@ -96,15 +110,15 @@ const toFood = (r) => ({
   carbs: Number(r.carbs_g),
   fat: Number(r.fat_g),
   dietType: r.diet_type,
-  imageUrl: r.image_url,
+  imageUrl: fullUrl(r.image_url, base),
   createdAt: r.created_at,
   updatedAt: r.updated_at,
 });
 
-async function loadFood(id) {
+async function loadFood(id, base) {
   const { rows } = await query(`${FOOD_SELECT} WHERE f.id = $1`, [id]);
   if (!rows[0]) throw notFound('Food not found.', 'food_not_found');
-  return toFood(rows[0]);
+  return toFood(rows[0], base);
 }
 
 async function readFood(body) {
@@ -139,11 +153,12 @@ async function readFood(body) {
 
 nutritionRouter.get('/foods', staffOnly, async (_req, res) => {
   const { rows } = await query(`${FOOD_SELECT} ORDER BY lower(fc.name), lower(f.name)`);
-  res.json({ foods: rows.map(toFood) });
+  const base = baseOf(_req);
+  res.json({ foods: rows.map((r) => toFood(r, base)) });
 });
 
 nutritionRouter.get('/foods/:id', staffOnly, async (req, res) => {
-  res.json({ food: await loadFood(req.params.id) });
+  res.json({ food: await loadFood(req.params.id, baseOf(req)) });
 });
 
 nutritionRouter.post('/foods', requireRole('admin'), async (req, res) => {
@@ -152,7 +167,7 @@ nutritionRouter.post('/foods', requireRole('admin'), async (req, res) => {
     `INSERT INTO foods (category_id, name, serving_size, calories, protein_g, carbs_g, fat_g, diet_type, image_url, created_by)
      VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10) RETURNING id`,
     [x.categoryId, x.name, x.servingSize, x.calories, x.protein, x.carbs, x.fat, x.dietType, x.imageUrl, req.user.id]);
-  res.status(201).json({ food: await loadFood(rows[0].id) });
+  res.status(201).json({ food: await loadFood(rows[0].id, baseOf(req)) });
 });
 
 nutritionRouter.put('/foods/:id', requireRole('admin'), async (req, res) => {
@@ -162,7 +177,7 @@ nutritionRouter.put('/foods/:id', requireRole('admin'), async (req, res) => {
        fat_g = $8, diet_type = $9, image_url = $10 WHERE id = $1`,
     [req.params.id, x.categoryId, x.name, x.servingSize, x.calories, x.protein, x.carbs, x.fat, x.dietType, x.imageUrl]);
   if (!rowCount) throw notFound('Food not found.', 'food_not_found');
-  res.json({ food: await loadFood(req.params.id) });
+  res.json({ food: await loadFood(req.params.id, baseOf(req)) });
 });
 
 nutritionRouter.delete('/foods/:id', requireRole('admin'), async (req, res) => {
@@ -195,15 +210,16 @@ const PLAN_SELECT = `
          COALESCE(json_agg(json_build_object(
            'id', i.id, 'foodId', i.food_id, 'meal', i.meal, 'position', i.position, 'servings', i.servings, 'note', i.note,
            'name', i.food_name, 'servingSize', i.serving_size, 'calories', i.calories, 'protein', i.protein_g,
-           'carbs', i.carbs_g, 'fat', i.fat_g
+           'carbs', i.carbs_g, 'fat', i.fat_g, 'imageUrl', fd.image_url
          ) ORDER BY i.position) FILTER (WHERE i.id IS NOT NULL), '[]') AS items
   FROM nutrition_plans p
   LEFT JOIN users s ON s.id = p.sent_by
-  LEFT JOIN nutrition_plan_items i ON i.plan_id = p.id`;
+  LEFT JOIN nutrition_plan_items i ON i.plan_id = p.id
+  LEFT JOIN foods fd ON fd.id = i.food_id`;
 
-function toPlan(r) {
+function toPlan(r, base) {
   const items = r.items.map((i) => ({
-    ...i, servings: Number(i.servings), calories: Number(i.calories), protein: Number(i.protein), carbs: Number(i.carbs), fat: Number(i.fat),
+    ...i, imageUrl: fullUrl(i.imageUrl, base), servings: Number(i.servings), calories: Number(i.calories), protein: Number(i.protein), carbs: Number(i.carbs), fat: Number(i.fat),
   }));
   const sum = (k) => round1(items.reduce((n, i) => n + i[k] * i.servings, 0));
   return {
@@ -219,10 +235,10 @@ function toPlan(r) {
   };
 }
 
-async function loadPlan(id) {
+async function loadPlan(id, base) {
   const { rows } = await query(`${PLAN_SELECT} WHERE p.id = $1 GROUP BY p.id, s.display_name`, [id]);
   if (!rows[0]) throw notFound('Nutrition plan not found.', 'plan_not_found');
-  return toPlan(rows[0]);
+  return toPlan(rows[0], base);
 }
 
 nutritionRouter.get('/plans', async (req, res) => {
@@ -231,12 +247,13 @@ nutritionRouter.get('/plans', async (req, res) => {
   await accessTo(req, userId);
   const { rows } = await query(
     `${PLAN_SELECT} WHERE p.user_id = $1 GROUP BY p.id, s.display_name ORDER BY p.created_at DESC LIMIT 50`, [userId]);
-  const plans = rows.map(toPlan);
+  const base = baseOf(req);
+  const plans = rows.map((r) => toPlan(r, base));
   res.json({ current: plans[0] ?? null, history: plans.slice(1) });
 });
 
 nutritionRouter.get('/plans/:id', async (req, res) => {
-  const plan = await loadPlan(req.params.id);
+  const plan = await loadPlan(req.params.id, baseOf(req));
   await accessTo(req, plan.userId);
   res.json({ plan });
 });
@@ -287,7 +304,7 @@ nutritionRouter.post('/plans', staffOnly, async (req, res) => {
     }
     return rows[0].id;
   });
-  res.status(201).json({ plan: await loadPlan(id) });
+  res.status(201).json({ plan: await loadPlan(id, baseOf(req)) });
 });
 
 nutritionRouter.delete('/plans/:id', staffOnly, async (req, res) => {

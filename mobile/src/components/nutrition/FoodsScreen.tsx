@@ -3,9 +3,9 @@
 // serving. Super Admin and Admins also add / edit / delete foods and manage
 // categories (canEdit). "Send a nutrition plan" for staff who may send.
 
-import { useState } from 'react';
+import { useCallback, useState } from 'react';
 import { Text, View } from 'react-native';
-import { router } from 'expo-router';
+import { router, useFocusEffect } from 'expo-router';
 import { useApi } from '@/lib/useApi';
 import { FOOD_DIETS, foodsApi } from '@/lib/nutrition';
 import { Filters, initialFilters, matches, type FilterSection, type FilterValue } from '@/components/filters/Filters';
@@ -19,6 +19,11 @@ export function FoodsScreen({ p, canEdit, canSend }: { p: Palette; canEdit: bool
   const foods = useApi(foodsApi.foods);
   const [search, setSearch] = useState('');
   const [showCats, setShowCats] = useState(false);
+  // Back from adding / editing a food: refresh the list quietly.
+  const [seenOnce, setSeenOnce] = useState(false);
+  useFocusEffect(useCallback(() => {
+    if (seenOnce) { void foods.reload(); void cats.reload(); } else setSeenOnce(true);
+  }, [seenOnce])); // eslint-disable-line react-hooks/exhaustive-deps
 
   const all = foods.data ?? [];
   const sections: FilterSection[] = [
@@ -75,7 +80,12 @@ export function FoodsScreen({ p, canEdit, canSend }: { p: Palette; canEdit: bool
       <Filters p={p} sections={sections} value={filters} onChange={setFilters} count={(v) => apply(v).length} />
 
       {!foods.data && !foods.error && <Loading />}
-      {foods.data && <Text style={{ color: p.textSecondary, fontSize: 13 }}>Showing {shown.length} of {all.length} foods · values are per serving</Text>}
+      {foods.data && (
+        <Text style={{ color: p.textSecondary, fontSize: 13 }}>
+          Showing {shown.length} of {all.length} foods · values are per serving ·{' '}
+          <Text style={{ color: p.accent }} onPress={() => router.push('/photo-credits')}>Photo credits</Text>
+        </Text>
+      )}
       {foods.data && shown.length === 0 && all.length === 0 && (
         <Empty p={p} icon="nutrition-outline" text={canEdit ? 'No foods yet. Tap "Add food".' : 'No foods yet.'} />
       )}

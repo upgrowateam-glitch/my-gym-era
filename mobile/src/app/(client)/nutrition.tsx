@@ -35,6 +35,9 @@ export default function UserNutrition() {
             </Text>
           </View>
           <PlanView p={p} plan={current} />
+          <Text style={{ color: p.textSecondary, fontSize: 12, textAlign: 'center' }} onPress={() => router.push('/photo-credits')}>
+            Food photos: <Text style={{ color: p.accent }}>credits</Text>
+          </Text>
         </>
       )}
       {history.length > 0 && (
