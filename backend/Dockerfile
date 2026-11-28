@@ -13,6 +13,8 @@ RUN npm ci --omit=dev && npm cache clean --force
 COPY src ./src
 COPY migrations ./migrations
 COPY scripts ./scripts
+# Photos for the starter food list (and their credits), shipped with the server.
+COPY static ./static
 
 # Folder for uploaded files (kept in a Docker volume), owned by the
 # unprivileged "node" user the server runs as.

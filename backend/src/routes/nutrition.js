@@ -43,7 +43,13 @@ const round1 = (n) => Math.round(n * 10) / 10;
 // ── Photo credits ───────────────────────────────────────────────────────────
 // The starter food photos are free-licensed; their licenses ask us to name the
 // photographer. Anyone signed in can see this list.
-const CREDITS = JSON.parse(readFileSync(new URL('../../static/starter-foods/credits.json', import.meta.url), 'utf8'));
+// Never let a missing credits file stop the server from starting.
+let CREDITS = [];
+try {
+  CREDITS = JSON.parse(readFileSync(new URL('../../static/starter-foods/credits.json', import.meta.url), 'utf8'));
+} catch (err) {
+  console.error(`Photo credits not loaded: ${err.message}`);
+}
 nutritionRouter.get('/photo-credits', (_req, res) => {
   res.json({ credits: CREDITS.map(({ food, author, license, source }) => ({ food, author, license, source })) });
 });
