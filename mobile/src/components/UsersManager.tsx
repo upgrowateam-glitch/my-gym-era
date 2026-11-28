@@ -4,7 +4,7 @@
 // Computer / tablet: a table (tap a row for the full profile and actions).
 // Phone: cards with the actions on each card. The server checks every action.
 
-import { useState, type ReactNode } from 'react';
+import { useState } from 'react';
 import { Pressable, Switch, Text, View, type LayoutChangeEvent } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
@@ -13,30 +13,20 @@ import { useApi } from '@/lib/useApi';
 import { assignTrainer, setAccountActive } from '@/lib/userActions';
 import type { TrainerSummary, User } from '@/lib/types';
 import { TrainerAssign } from './TrainerAssign';
-import { Avatar, Badge, Card, Chips, Empty, Field, Notice, ToggleRow, type Palette } from './ui/UI';
+import { Avatar, Badge, Card, Empty, Field, Notice, ToggleRow, type Palette } from './ui/UI';
+import { Filters, initialFilters, matches, type FilterSection, type FilterValue } from './filters/Filters';
 import { Kpi, KpiRow, shortDate } from './staff/DashboardUI';
 
-type Filter = 'all' | 'active' | 'inactive' | 'unassigned' | 'incomplete' | 'new';
-type Sort = 'newest' | 'oldest' | 'name';
 const TABLE_MIN = 860;
 
 const thisMonth = () => new Date().toISOString().slice(0, 7);
 const isNew = (u: User) => u.createdAt.slice(0, 7) === thisMonth();
 
-const FILTERS: Record<Filter, (u: User) => boolean> = {
-  all: () => true,
-  active: (u) => !u.isArchived,
-  inactive: (u) => u.isArchived,
-  unassigned: (u) => !u.isArchived && !u.trainerId,
-  incomplete: (u) => !u.profileCompleted,
-  new: isNew,
-};
+const waiting = (u: User) => !u.isArchived && !u.trainerId;
+const withinDays = (u: User, days: number) => Date.now() - new Date(u.createdAt).getTime() <= days * 86400000;
 
 export function UsersManager({ p, canToggle }: { p: Palette; canToggle: boolean }) {
   const [search, setSearch] = useState('');
-  const [filter, setFilter] = useState<Filter>('all');
-  const [trainerId, setTrainerId] = useState<string>('any');
-  const [sort, setSort] = useState<Sort>('newest');
   const [width, setWidth] = useState(0);
   const [busyId, setBusyId] = useState<string | null>(null);
   const [assignOpenId, setAssignOpenId] = useState<string | null>(null);
@@ -47,16 +37,39 @@ export function UsersManager({ p, canToggle }: { p: Palette; canToggle: boolean 
   const trainers = useApi(() => api.get<{ trainers: TrainerSummary[] }>('/api/admin/trainers', { scope: 'all' }).then((r) => r.trainers));
 
   const users = list.data ?? [];
-  const count = (f: Filter) => users.filter(FILTERS[f]).length;
-  const q = search.trim().toLowerCase();
-  const shown = users
-    .filter(FILTERS[filter])
-    .filter((u) => trainerId === 'any' || (trainerId === 'none' ? !u.trainerId : u.trainerId === trainerId))
-    .filter((u) => !q || u.displayName.toLowerCase().includes(q) || u.email.toLowerCase().includes(q)
-      || (u.whatsapp ?? '').replace(/\s/g, '').includes(q.replace(/\s/g, '')))
-    .sort((a, b) => (sort === 'name'
-      ? (a.displayName || a.email).localeCompare(b.displayName || b.email)
-      : sort === 'oldest' ? a.createdAt.localeCompare(b.createdAt) : b.createdAt.localeCompare(a.createdAt)));
+  const sections: FilterSection[] = [
+    { key: 'status', title: 'Account status', options: [
+      { value: 'active', label: 'Active', color: '#4ADE80' }, { value: 'inactive', label: 'Deactivated', color: '#EF5350' },
+    ] },
+    { key: 'trainer', title: 'Trainer', options: [
+      { value: 'none', label: `Waiting for trainer (${users.filter(waiting).length})` },
+      ...(trainers.data ?? []).map((t) => ({ value: t.uid, label: `${t.displayName || t.email} (${t.clientCount})` })),
+    ] },
+    { key: 'profile', title: 'Fitness profile', options: [{ value: 'done', label: 'Finished' }, { value: 'notDone', label: 'Not finished' }] },
+    { key: 'joined', title: 'Joined', options: [
+      { value: 'month', label: 'This month' }, { value: '7', label: 'Last 7 days' }, { value: '30', label: 'Last 30 days' }, { value: 'older', label: 'Over 30 days ago' },
+    ] },
+    { key: 'sort', title: 'Sort by', single: true, defaultValue: 'newest', options: [
+      { value: 'newest', label: 'Newest first' }, { value: 'oldest', label: 'Oldest first' }, { value: 'name', label: 'Name A–Z' },
+    ] },
+  ];
+  const [filters, setFilters] = useState<FilterValue>(() => initialFilters(sections));
+  const apply = (v: FilterValue) => {
+    const q = search.trim().toLowerCase();
+    const sort = v.sort?.[0] ?? 'newest';
+    return users
+      .filter((u) => matches(v, 'status', (s) => (s === 'active' ? !u.isArchived : u.isArchived))
+        && matches(v, 'trainer', (t) => (t === 'none' ? waiting(u) : u.trainerId === t))
+        && matches(v, 'profile', (x) => (x === 'done' ? u.profileCompleted : !u.profileCompleted))
+        && matches(v, 'joined', (j) => (j === 'month' ? isNew(u) : j === 'older' ? !withinDays(u, 30) : withinDays(u, Number(j))))
+        && (!q || u.displayName.toLowerCase().includes(q) || u.email.toLowerCase().includes(q)
+          || (u.whatsapp ?? '').replace(/s/g, '').includes(q.replace(/s/g, ''))))
+      .sort((a, b) => (sort === 'name'
+        ? (a.displayName || a.email).localeCompare(b.displayName || b.email)
+        : sort === 'oldest' ? a.createdAt.localeCompare(b.createdAt) : b.createdAt.localeCompare(a.createdAt)));
+  };
+  const shown = apply(filters);
+  const active = users.filter((u) => !u.isArchived).length;
   const wide = width >= TABLE_MIN;
 
   const replace = (u: User) => list.setData((cur) => (cur ?? []).map((x) => (x.uid === u.uid ? u : x)));
@@ -87,49 +100,27 @@ export function UsersManager({ p, canToggle }: { p: Palette; canToggle: boolean 
     if (r.info) setInfo(r.info);
   }, 'Could not update the account.');
 
-  const pick = (f: Filter) => { setFilter(f); setTrainerId('any'); };
+  // The total cards set the matching filter.
+  const pick = (patch: FilterValue) => setFilters({ ...initialFilters(sections), sort: filters.sort, ...patch });
 
   return (
     <View style={{ gap: 14 }} onLayout={(e: LayoutChangeEvent) => setWidth(e.nativeEvent.layout.width)}>
       <KpiRow>
         <Kpi minWidth={140} icon="people-outline" label="Total users" value={list.data ? users.length : undefined}
-          onPress={() => pick('all')} note={list.data ? `${count('inactive')} deactivated` : undefined} />
-        <Kpi minWidth={140} icon="pulse-outline" label="Active" value={list.data ? count('active') : undefined}
-          onPress={() => pick('active')} note="Can sign in" />
-        <Kpi minWidth={140} icon="sparkles-outline" label="New this month" value={list.data ? count('new') : undefined}
-          onPress={() => pick('new')} note="New registrations" />
-        <Kpi minWidth={140} icon="hourglass-outline" label="Waiting for trainer" value={list.data ? count('unassigned') : undefined}
-          onPress={() => pick('unassigned')} note={count('unassigned') ? 'Need a trainer' : 'Everyone assigned'}
-          noteColor={count('unassigned') ? '#FBBF24' : undefined} />
+          onPress={() => pick({})} note={list.data ? `${users.length - active} deactivated` : undefined} />
+        <Kpi minWidth={140} icon="pulse-outline" label="Active" value={list.data ? active : undefined}
+          onPress={() => pick({ status: ['active'] })} note="Can sign in" />
+        <Kpi minWidth={140} icon="sparkles-outline" label="New this month" value={list.data ? users.filter(isNew).length : undefined}
+          onPress={() => pick({ joined: ['month'] })} note="New registrations" />
+        <Kpi minWidth={140} icon="hourglass-outline" label="Waiting for trainer" value={list.data ? users.filter(waiting).length : undefined}
+          onPress={() => pick({ trainer: ['none'] })} note={users.some(waiting) ? 'Need a trainer' : 'Everyone assigned'}
+          noteColor={users.some(waiting) ? '#FBBF24' : undefined} />
       </KpiRow>
 
       <Field p={p} label="Search" icon="search-outline" value={search} onChangeText={setSearch}
         placeholder="Name, email or phone" autoCapitalize="none" />
 
-      <Group p={p} label="Show">
-        <Chips p={p} value={filter} onChange={setFilter} options={[
-          { value: 'all', label: `All (${users.length})` },
-          { value: 'active', label: `Active (${count('active')})` },
-          { value: 'inactive', label: `Deactivated (${count('inactive')})` },
-          { value: 'unassigned', label: `Waiting for trainer (${count('unassigned')})` },
-          { value: 'incomplete', label: `Profile not finished (${count('incomplete')})` },
-          { value: 'new', label: `New this month (${count('new')})` },
-        ]} />
-      </Group>
-      {(trainers.data?.length ?? 0) > 0 && (
-        <Group p={p} label="Trainer">
-          <Chips p={p} value={trainerId} onChange={setTrainerId} options={[
-            { value: 'any', label: 'Any trainer' },
-            { value: 'none', label: 'No trainer' },
-            ...(trainers.data ?? []).map((t) => ({ value: t.uid, label: `${t.displayName || t.email} (${t.clientCount})` })),
-          ]} />
-        </Group>
-      )}
-      <Group p={p} label="Sort">
-        <Chips p={p} value={sort} onChange={setSort} options={[
-          { value: 'newest', label: 'Newest first' }, { value: 'oldest', label: 'Oldest first' }, { value: 'name', label: 'Name A–Z' },
-        ]} />
-      </Group>
+      <Filters p={p} sections={sections} value={filters} onChange={setFilters} count={(v) => apply(v).length} />
 
       {(error || list.error || trainers.error) && <Notice text={(error ?? list.error ?? trainers.error)!} />}
       {info && <Notice kind="info" text={info} />}
@@ -139,7 +130,7 @@ export function UsersManager({ p, canToggle }: { p: Palette; canToggle: boolean 
         </Text>
       )}
       {list.data && shown.length === 0 && (
-        <Empty p={p} icon="people-outline" text={users.length === 0 ? 'No users yet. Users sign up in the app.' : 'No users match.'} />
+        <Empty p={p} icon="people-outline" text={users.length === 0 ? 'No users yet. Users sign up in the app.' : 'No users match these filters.'} />
       )}
 
       {wide ? (
@@ -173,14 +164,6 @@ export function UsersManager({ p, canToggle }: { p: Palette; canToggle: boolean 
   );
 }
 
-function Group({ p, label, children }: { p: Palette; label: string; children: ReactNode }) {
-  return (
-    <View style={{ gap: 6 }}>
-      <Text style={{ color: p.textSecondary, fontSize: 12.5, fontWeight: '700', letterSpacing: 0.3 }}>{label}</Text>
-      {children}
-    </View>
-  );
-}
 
 /** Computer layout: one row per user. Tap a row for the profile, trainer and status actions. */
 function UsersTable({ p, users, busyId, canToggle, onActive }: {

@@ -14,16 +14,16 @@ import { api, ApiError } from '@/lib/api';
 import { useApi } from '@/lib/useApi';
 import { setTrainerActive } from '@/lib/userActions';
 import type { TrainerSummary } from '@/lib/types';
-import { Avatar, Badge, Button, Chips, Empty, Field, Notice, type Palette } from './ui/UI';
+import { Avatar, Badge, Button, Empty, Field, Notice, type Palette } from './ui/UI';
+import { Filters, initialFilters, matches, type FilterSection, type FilterValue } from './filters/Filters';
 import { Kpi, KpiRow, shortDate } from './staff/DashboardUI';
 
-type Filter = 'all' | 'active' | 'inactive' | 'mine';
+
 
 export function TrainersManager({ p, inviteHref }: { p: Palette; inviteHref?: Href }) {
   const { user: me } = useAuth();
   const seeAll = me?.role === 'super_admin' || can(me, 'view_users');
   const [search, setSearch] = useState('');
-  const [filter, setFilter] = useState<Filter>('all');
   const [busyId, setBusyId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [info, setInfo] = useState<string | null>(null);
@@ -34,11 +34,36 @@ export function TrainersManager({ p, inviteHref }: { p: Palette; inviteHref?: Hr
   const isMine = (t: TrainerSummary) => t.managedBy === me?.uid;
   const mayToggle = (t: TrainerSummary) => me?.role === 'super_admin' || (can(me, 'manage_trainers') && isMine(t));
 
-  const q = search.trim().toLowerCase();
-  const shown = trainers
-    .filter((t) => filter === 'all' || (filter === 'active' ? !t.isArchived : filter === 'inactive' ? t.isArchived : isMine(t)))
-    .filter((t) => !q || (t.displayName || '').toLowerCase().includes(q) || t.email.toLowerCase().includes(q)
-      || (t.whatsapp ?? '').includes(q.replace(/\s/g, '')));
+  const managers = [...new Set(trainers.map((t) => t.managerName).filter((n): n is string => !!n))];
+  const sections: FilterSection[] = [
+    { key: 'status', title: 'Account status', options: [
+      { value: 'active', label: 'Active', color: '#4ADE80' }, { value: 'inactive', label: 'Deactivated', color: '#EF5350' },
+    ] },
+    { key: 'users', title: 'Assigned users', options: [
+      { value: 'none', label: 'No users yet' }, { value: 'some', label: '1–5 users' }, { value: 'many', label: 'More than 5' },
+    ] },
+    ...(managers.length > 0 ? [{ key: 'invitedBy', title: 'Invited by', options: managers.map((m) => ({
+      value: m, label: trainers.some((t) => isMine(t) && t.managerName === m) ? `${m} (you)` : m,
+    })) }] : []),
+    { key: 'sort', title: 'Sort by', single: true, defaultValue: 'name', options: [
+      { value: 'name', label: 'Name A–Z' }, { value: 'most', label: 'Most users' }, { value: 'fewest', label: 'Fewest users' },
+      { value: 'newest', label: 'Newest first' },
+    ] },
+  ];
+  const [filters, setFilters] = useState<FilterValue>(() => initialFilters(sections));
+  const apply = (v: FilterValue) => {
+    const q = search.trim().toLowerCase();
+    const sort = v.sort?.[0] ?? 'name';
+    return trainers
+      .filter((t) => matches(v, 'status', (s) => (s === 'active' ? !t.isArchived : t.isArchived))
+        && matches(v, 'users', (u) => (u === 'none' ? t.clientCount === 0 : u === 'some' ? t.clientCount >= 1 && t.clientCount <= 5 : t.clientCount > 5))
+        && matches(v, 'invitedBy', (m) => t.managerName === m)
+        && (!q || (t.displayName || '').toLowerCase().includes(q) || t.email.toLowerCase().includes(q)
+          || (t.whatsapp ?? '').includes(q.replace(/\s/g, ''))))
+      .sort((a, b) => (sort === 'most' ? b.clientCount - a.clientCount : sort === 'fewest' ? a.clientCount - b.clientCount
+        : sort === 'newest' ? b.createdAt.localeCompare(a.createdAt) : (a.displayName || a.email).localeCompare(b.displayName || b.email)));
+  };
+  const shown = apply(filters);
   const active = trainers.filter((t) => !t.isArchived);
   const coached = active.reduce((n, t) => n + t.clientCount, 0);
   const maxLoad = Math.max(1, ...trainers.map((t) => t.clientCount));
@@ -64,9 +89,9 @@ export function TrainersManager({ p, inviteHref }: { p: Palette; inviteHref?: Hr
     <View style={{ gap: 14 }}>
       <KpiRow>
         <Kpi minWidth={140} icon="barbell-outline" label="Trainers" value={list.data ? trainers.length : undefined}
-          onPress={() => setFilter('all')} note={list.data ? `${trainers.length - active.length} deactivated` : undefined} />
+          onPress={() => setFilters(initialFilters(sections))} note={list.data ? `${trainers.length - active.length} deactivated` : undefined} />
         <Kpi minWidth={140} icon="pulse-outline" label="Active trainers" value={list.data ? active.length : undefined}
-          onPress={() => setFilter('active')} note="Can sign in" />
+          onPress={() => setFilters({ ...initialFilters(sections), status: ['active'] })} note="Can sign in" />
         <Kpi minWidth={140} icon="people-outline" label="Users coached" value={list.data ? coached : undefined}
           note={active.length ? `About ${Math.round(coached / active.length)} per trainer` : 'No active trainers'} />
       </KpiRow>
@@ -79,12 +104,7 @@ export function TrainersManager({ p, inviteHref }: { p: Palette; inviteHref?: Hr
 
       <Field p={p} label="Search" icon="search-outline" value={search} onChangeText={setSearch}
         placeholder="Name, email or phone" autoCapitalize="none" />
-      <Chips p={p} value={filter} onChange={setFilter} options={[
-        { value: 'all', label: `All (${trainers.length})` },
-        { value: 'active', label: `Active (${active.length})` },
-        { value: 'inactive', label: `Deactivated (${trainers.length - active.length})` },
-        ...(me?.role === 'admin' && seeAll ? [{ value: 'mine' as const, label: `Invited by me (${trainers.filter(isMine).length})` }] : []),
-      ]} />
+      <Filters p={p} sections={sections} value={filters} onChange={setFilters} count={(v) => apply(v).length} />
       {!seeAll && <Notice kind="info" text={'You see the trainers you invited. "View all users" access shows every trainer.'} />}
 
       {(error || list.error) && <Notice text={(error ?? list.error)!} />}

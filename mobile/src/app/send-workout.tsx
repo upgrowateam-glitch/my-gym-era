@@ -11,7 +11,9 @@ import { useAuth } from '@/lib/auth';
 import { api, ApiError } from '@/lib/api';
 import { useApi } from '@/lib/useApi';
 import type { User } from '@/lib/types';
-import { BODY_PARTS, DIFFICULTIES, dayLabel, library, todayKey, workouts, type BodyPart, type Difficulty, type WorkoutVideo } from '@/lib/workouts';
+import { dayLabel, library, todayKey, workouts, type WorkoutVideo } from '@/lib/workouts';
+import { Filters, initialFilters, type FilterValue } from '@/components/filters/Filters';
+import { applyVideoFilters, videoFilterSections } from '@/components/library/videoFilters';
 import { RequireRole } from '@/components/RequireRole';
 import { BackPage } from '@/components/staff/BackPage';
 import { VideoCard } from '@/components/library/VideoCard';
@@ -71,18 +73,18 @@ function SendForm({ users, videos, userId: initialUser, videoId }: { users: User
   });
   const [browsing, setBrowsing] = useState(picked.length === 0);
   const [search, setSearch] = useState('');
-  const [difficulty, setDifficulty] = useState<Difficulty | 'all'>('all');
-  const [bodyPart, setBodyPart] = useState<BodyPart | 'all'>('all');
+  const [filters, setFilters] = useState<FilterValue>(() => initialFilters(videoFilterSections(null, false)));
   const [sending, setSending] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const chosenUser = users.find((u) => u.uid === userId) ?? null;
   const uq = userSearch.trim().toLowerCase();
   const userList = users.filter((u) => !uq || (u.displayName || '').toLowerCase().includes(uq) || u.email.toLowerCase().includes(uq));
-  const q = search.trim().toLowerCase();
-  const matches = videos.filter((v) => (difficulty === 'all' || v.difficulty === difficulty)
-    && (bodyPart === 'all' || v.bodyParts.includes(bodyPart))
-    && (!q || v.title.toLowerCase().includes(q) || v.categoryName.toLowerCase().includes(q) || v.equipment.toLowerCase().includes(q)));
+  // Categories for the filter come from the videos themselves.
+  const categories = [...new Map(videos.map((v) => [v.categoryId, { id: v.categoryId, name: v.categoryName, videoCount: 0 }])).values()]
+    .map((c) => ({ ...c, videoCount: videos.filter((v) => v.categoryId === c.id).length }));
+  const sections = videoFilterSections(categories, false);
+  const matches = applyVideoFilters(videos, filters, search);
   const isPicked = (id: string) => picked.some((x) => x.video.id === id);
   const minutes = picked.reduce((n, x) => n + x.video.durationMinutes, 0);
 
@@ -184,8 +186,7 @@ function SendForm({ users, videos, userId: initialUser, videoId }: { users: User
         {browsing && (
           <View style={{ gap: 10 }}>
             <Field p={p} label="Find videos" icon="search-outline" value={search} onChangeText={setSearch} placeholder="Exercise, category, equipment" />
-            <Chips p={p} value={difficulty} onChange={setDifficulty} options={[{ value: 'all' as const, label: 'Any level' }, ...DIFFICULTIES.map((d) => ({ value: d.value, label: d.label }))]} />
-            <Chips p={p} value={bodyPart} onChange={setBodyPart} options={[{ value: 'all' as const, label: 'Any body part' }, ...BODY_PARTS.map((b) => ({ value: b.value, label: b.label }))]} />
+            <Filters p={p} sections={sections} value={filters} onChange={setFilters} count={(v) => applyVideoFilters(videos, v, search).length} />
             {matches.length === 0 && <Text style={{ color: p.textSecondary }}>No videos match.</Text>}
             <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 10 }}>
               {matches.map((v) => <VideoCard key={v.id} p={p} video={v} compact selected={isPicked(v.id)} onPress={() => toggle(v)} />)}

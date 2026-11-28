@@ -7,8 +7,9 @@ import { useState } from 'react';
 import { Text, View } from 'react-native';
 import { router } from 'expo-router';
 import { useApi } from '@/lib/useApi';
-import { FOOD_DIETS, foodsApi, type FoodDiet } from '@/lib/nutrition';
-import { Button, Chips, Empty, Field, Notice, type Palette } from '@/components/ui/UI';
+import { FOOD_DIETS, foodsApi } from '@/lib/nutrition';
+import { Filters, initialFilters, matches, type FilterSection, type FilterValue } from '@/components/filters/Filters';
+import { Button, Empty, Field, Notice, type Palette } from '@/components/ui/UI';
 import { Kpi, KpiRow, Loading } from '@/components/staff/DashboardUI';
 import { CategoryManager } from '@/components/library/CategoryManager';
 import { FoodRow } from './NutritionUI';
@@ -17,17 +18,34 @@ export function FoodsScreen({ p, canEdit, canSend }: { p: Palette; canEdit: bool
   const cats = useApi(foodsApi.categories);
   const foods = useApi(foodsApi.foods);
   const [search, setSearch] = useState('');
-  const [category, setCategory] = useState('all');
-  const [diet, setDiet] = useState<FoodDiet | 'all'>('all');
-  const [sort, setSort] = useState<'name' | 'protein' | 'calories'>('name');
   const [showCats, setShowCats] = useState(false);
 
   const all = foods.data ?? [];
-  const q = search.trim().toLowerCase();
-  const shown = all
-    .filter((f) => (category === 'all' || f.categoryId === category) && (diet === 'all' || f.dietType === diet)
-      && (!q || f.name.toLowerCase().includes(q) || f.categoryName.toLowerCase().includes(q)))
-    .sort((a, b) => (sort === 'protein' ? b.protein - a.protein : sort === 'calories' ? a.calories - b.calories : a.name.localeCompare(b.name)));
+  const sections: FilterSection[] = [
+    { key: 'category', title: 'Category', options: (cats.data ?? []).map((c) => ({ value: c.id, label: `${c.name} (${c.foodCount})` })) },
+    { key: 'diet', title: 'Food type', options: FOOD_DIETS.map((d) => ({ value: d.value, label: d.label, color: d.color })) },
+    { key: 'protein', title: 'Protein per serving', options: [
+      { value: 'high', label: '15 g or more' }, { value: 'mid', label: '5–15 g' }, { value: 'low', label: 'Under 5 g' },
+    ] },
+    { key: 'calories', title: 'Calories per serving', options: [
+      { value: 'low', label: 'Under 100 kcal' }, { value: 'mid', label: '100–250 kcal' }, { value: 'high', label: 'Over 250 kcal' },
+    ] },
+    { key: 'sort', title: 'Sort by', single: true, defaultValue: 'name', options: [
+      { value: 'name', label: 'Name A–Z' }, { value: 'protein', label: 'Most protein' }, { value: 'calories', label: 'Fewest calories' },
+    ] },
+  ];
+  const [filters, setFilters] = useState<FilterValue>(() => initialFilters(sections));
+  const band = (n: number, low: number, high: number) => (n < low ? 'low' : n >= high ? 'high' : 'mid');
+  const apply = (v: FilterValue) => {
+    const q = search.trim().toLowerCase();
+    const sort = v.sort?.[0] ?? 'name';
+    return all
+      .filter((f) => matches(v, 'category', (c) => f.categoryId === c) && matches(v, 'diet', (d) => f.dietType === d)
+        && matches(v, 'protein', (b) => band(f.protein, 5, 15) === b) && matches(v, 'calories', (b) => band(f.calories, 100, 250.0001) === b)
+        && (!q || f.name.toLowerCase().includes(q) || f.categoryName.toLowerCase().includes(q)))
+      .sort((a, b) => (sort === 'protein' ? b.protein - a.protein : sort === 'calories' ? a.calories - b.calories : a.name.localeCompare(b.name)));
+  };
+  const shown = apply(filters);
 
   return (
     <View style={{ gap: 14 }}>
@@ -36,7 +54,7 @@ export function FoodsScreen({ p, canEdit, canSend }: { p: Palette; canEdit: bool
         <Kpi minWidth={140} icon="albums-outline" label="Categories" value={cats.data?.length}
           onPress={canEdit ? () => setShowCats(!showCats) : undefined} note={canEdit ? 'Tap to manage' : undefined} />
         <Kpi minWidth={140} icon="barbell-outline" label="High protein" value={foods.data ? all.filter((f) => f.protein >= 15).length : undefined}
-          note="15 g or more per serving" onPress={() => setSort('protein')} />
+          note="15 g or more per serving" onPress={() => setFilters({ ...filters, protein: ['high'], sort: ['protein'] })} />
       </KpiRow>
 
       <View style={{ flexDirection: 'row', gap: 10, flexWrap: 'wrap' }}>
@@ -54,21 +72,7 @@ export function FoodsScreen({ p, canEdit, canSend }: { p: Palette; canEdit: bool
       {(cats.error || foods.error) && <Notice text={(cats.error ?? foods.error)!} />}
 
       <Field p={p} label="Search" icon="search-outline" value={search} onChangeText={setSearch} placeholder="Food or category" autoCapitalize="none" />
-      {(cats.data?.length ?? 0) > 0 && (
-        <Group p={p} label="Category">
-          <Chips p={p} value={category} onChange={setCategory} options={[
-            { value: 'all', label: 'All' }, ...(cats.data ?? []).map((c) => ({ value: c.id, label: `${c.name} (${c.foodCount})` })),
-          ]} />
-        </Group>
-      )}
-      <Group p={p} label="Food type">
-        <Chips p={p} value={diet} onChange={setDiet} options={[{ value: 'all' as const, label: 'All' }, ...FOOD_DIETS.map((d) => ({ value: d.value, label: d.label }))]} />
-      </Group>
-      <Group p={p} label="Sort">
-        <Chips p={p} value={sort} onChange={setSort} options={[
-          { value: 'name' as const, label: 'Name A–Z' }, { value: 'protein' as const, label: 'Most protein' }, { value: 'calories' as const, label: 'Fewest calories' },
-        ]} />
-      </Group>
+      <Filters p={p} sections={sections} value={filters} onChange={setFilters} count={(v) => apply(v).length} />
 
       {!foods.data && !foods.error && <Loading />}
       {foods.data && <Text style={{ color: p.textSecondary, fontSize: 13 }}>Showing {shown.length} of {all.length} foods · values are per serving</Text>}
@@ -77,13 +81,10 @@ export function FoodsScreen({ p, canEdit, canSend }: { p: Palette; canEdit: bool
       )}
       {foods.data && shown.length === 0 && all.length > 0 && (
         <View style={{ alignItems: 'center', gap: 10, paddingVertical: 20 }}>
-          <Empty p={p} icon="nutrition-outline" text={`No foods match ${[
-            category !== 'all' ? `"${cats.data?.find((c) => c.id === category)?.name ?? 'this category'}"` : null,
-            diet !== 'all' ? `"${FOOD_DIETS.find((d) => d.value === diet)?.label}"` : null,
-            q ? `"${search.trim()}"` : null,
-          ].filter(Boolean).join(' + ') || 'these filters'}.${category !== 'all' && diet === 'vegan' ? ' (Dairy, eggs, meat and fish are never vegan.)' : ''}`} />
+          <Empty p={p} icon="nutrition-outline" text={`No foods match these filters${search.trim() ? ` and "${search.trim()}"` : ''}.${
+            (filters.diet ?? []).length === 1 && filters.diet[0] === 'vegan' && (filters.category ?? []).length ? ' (Dairy, eggs, meat and fish are never vegan.)' : ''}`} />
           <Button p={p} small kind="outline" label="Clear filters" icon="close"
-            onPress={() => { setCategory('all'); setDiet('all'); setSearch(''); }} />
+            onPress={() => { setFilters(initialFilters(sections)); setSearch(''); }} />
         </View>
       )}
       <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 10 }}>
@@ -97,11 +98,3 @@ export function FoodsScreen({ p, canEdit, canSend }: { p: Palette; canEdit: bool
   );
 }
 
-function Group({ p, label, children }: { p: Palette; label: string; children: React.ReactNode }) {
-  return (
-    <View style={{ gap: 6 }}>
-      <Text style={{ color: p.textSecondary, fontSize: 12.5, fontWeight: '700', letterSpacing: 0.3 }}>{label}</Text>
-      {children}
-    </View>
-  );
-}
