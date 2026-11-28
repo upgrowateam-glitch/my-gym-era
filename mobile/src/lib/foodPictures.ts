@@ -1,0 +1,71 @@
+// A picture for every food that has no uploaded photo: a matching food emoji
+// (by the food's name, then its category). An uploaded photo always wins.
+
+const BY_NAME: [RegExp, string][] = [
+  [/brown rice|white rice|\brice\b|poha/i, '🍚'],
+  [/chapati|roti|paratha/i, '🫓'],
+  [/bread/i, '🍞'],
+  [/oats|muesli|porridge/i, '🥣'],
+  [/idli|dosa|upma/i, '🍘'],
+  [/quinoa/i, '🌾'],
+  [/dal|lentil/i, '🍲'],
+  [/rajma|kidney bean|chickpea|chana(?!.*roasted)|soya/i, '🫘'],
+  [/roasted chana|bengal gram/i, '🫘'],
+  [/sprout/i, '🌱'],
+  [/tofu|paneer/i, '🧀'],
+  [/sweet potato/i, '🍠'],
+  [/potato/i, '🥔'],
+  [/spinach|palak|greens/i, '🥬'],
+  [/broccoli/i, '🥦'],
+  [/peas/i, '🫛'],
+  [/cucumber/i, '🥒'],
+  [/tomato/i, '🍅'],
+  [/carrot/i, '🥕'],
+  [/banana/i, '🍌'],
+  [/apple/i, '🍎'],
+  [/orange juice/i, '🧃'],
+  [/orange/i, '🍊'],
+  [/papaya|guava/i, '🍈'],
+  [/mango/i, '🥭'],
+  [/watermelon/i, '🍉'],
+  [/grape/i, '🍇'],
+  [/date/i, '🌴'],
+  [/buttermilk|chaas|lassi/i, '🥛'],
+  [/milk/i, '🥛'],
+  [/yogurt|curd|dahi/i, '🍶'],
+  [/cheese/i, '🧀'],
+  [/egg/i, '🥚'],
+  [/chicken/i, '🍗'],
+  [/salmon|fish|cod|tuna/i, '🐟'],
+  [/prawn|shrimp/i, '🦐'],
+  [/mutton|goat|lamb|beef/i, '🥩'],
+  [/coconut/i, '🥥'], // before "nut"
+  [/almond|walnut|cashew|nut/i, '🥜'],
+  [/peanut/i, '🥜'],
+  [/chia|flax|seed/i, '🌰'],
+  [/makhana|popcorn/i, '🍿'],
+  [/chocolate/i, '🍫'],
+  [/coffee/i, '☕'],
+  [/tea/i, '🍵'],
+  [/whey|protein powder|shake/i, '🥤'],
+  [/ghee|butter/i, '🧈'],
+  [/oil/i, '🫒'],
+];
+
+const BY_CATEGORY: [RegExp, string][] = [
+  [/grain|cereal/i, '🌾'],
+  [/pulse|legume/i, '🫘'],
+  [/vegetable/i, '🥗'],
+  [/fruit/i, '🍎'],
+  [/dairy/i, '🥛'],
+  [/egg|meat|fish/i, '🍗'],
+  [/nut|seed/i, '🥜'],
+  [/snack/i, '🍿'],
+  [/drink|beverage/i, '🥤'],
+  [/supplement/i, '💊'],
+  [/fat|oil/i, '🫒'],
+];
+
+export function foodEmoji(name: string, category = ''): string {
+  return BY_NAME.find(([re]) => re.test(name))?.[1] ?? BY_CATEGORY.find(([re]) => re.test(category))?.[1] ?? '🍽️';
+}

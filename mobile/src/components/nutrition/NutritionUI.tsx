@@ -8,6 +8,7 @@ import {
   MACRO_COLORS, MEALS, dietOf, scaled, servingsText, type Food, type Macros, type NutritionPlan, type PlanItem,
 } from '@/lib/nutrition';
 import type { Palette } from '@/components/ui/UI';
+import { foodEmoji } from '@/lib/foodPictures';
 
 /** Small coloured dot: vegan / veg / egg / non-veg. */
 export function DietDot({ diet }: { diet: Food['dietType'] }) {
@@ -37,14 +38,23 @@ export function MacroChips({ m, small }: { m: Omit<Macros, 'calories'>; small?: 
   );
 }
 
-/** One food: photo (if any), name, serving, calories and macros. */
+/** The food's uploaded photo, or a matching food emoji on a tinted tile. */
+export function FoodPicture({ p, name, category, imageUrl, size = 46 }: {
+  p: Palette; name: string; category?: string; imageUrl?: string | null; size?: number;
+}) {
+  return (
+    <View style={{ width: size, height: size, borderRadius: size * 0.26, backgroundColor: p.accent + '1A', overflow: 'hidden', alignItems: 'center', justifyContent: 'center' }}>
+      {imageUrl ? <Image source={{ uri: imageUrl }} style={{ width: size, height: size }} contentFit="cover" />
+        : <Text style={{ fontSize: size * 0.52 }}>{foodEmoji(name, category)}</Text>}
+    </View>
+  );
+}
+
+/** One food: photo (or emoji), name, serving, calories and macros. */
 export function FoodRow({ p, food, onPress, right }: { p: Palette; food: Food; onPress?: () => void; right?: React.ReactNode }) {
   const body = (
     <>
-      <View style={{ width: 46, height: 46, borderRadius: 12, backgroundColor: p.elevated, overflow: 'hidden', alignItems: 'center', justifyContent: 'center' }}>
-        {food.imageUrl ? <Image source={{ uri: food.imageUrl }} style={{ width: 46, height: 46 }} contentFit="cover" />
-          : <Ionicons name="nutrition-outline" size={22} color={p.textSecondary} />}
-      </View>
+      <FoodPicture p={p} name={food.name} category={food.categoryName} imageUrl={food.imageUrl} size={46} />
       <View style={{ flex: 1, minWidth: 0, gap: 3 }}>
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
           <DietDot diet={food.dietType} />
@@ -100,8 +110,11 @@ export function PlanItemRow({ p, item }: { p: Palette; item: PlanItem }) {
   const m = scaled(item, item.servings);
   return (
     <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12, paddingVertical: 8 }}>
-      <View style={{ minWidth: 40, paddingHorizontal: 6, paddingVertical: 4, borderRadius: 8, backgroundColor: p.accent + '22', alignItems: 'center' }}>
-        <Text style={{ color: p.accent, fontWeight: '800', fontSize: 13.5 }}>×{servingsText(item.servings)}</Text>
+      <View style={{ alignItems: 'center', gap: 4 }}>
+        <FoodPicture p={p} name={item.name} size={40} />
+        <View style={{ minWidth: 40, paddingHorizontal: 6, paddingVertical: 2, borderRadius: 8, backgroundColor: p.accent + '22', alignItems: 'center' }}>
+          <Text style={{ color: p.accent, fontWeight: '800', fontSize: 12.5 }}>×{servingsText(item.servings)}</Text>
+        </View>
       </View>
       <View style={{ flex: 1, minWidth: 0, gap: 2 }}>
         <Text style={{ color: p.text, fontSize: 15, fontWeight: '700' }}>{item.name}</Text>

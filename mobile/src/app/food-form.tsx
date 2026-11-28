@@ -3,7 +3,6 @@
 
 import { useState } from 'react';
 import { Text, View } from 'react-native';
-import { Image } from 'expo-image';
 import * as ImagePicker from 'expo-image-picker';
 import { router, useLocalSearchParams } from 'expo-router';
 import { ApiError } from '@/lib/api';
@@ -15,7 +14,7 @@ import { RequireRole } from '@/components/RequireRole';
 import { BackPage } from '@/components/staff/BackPage';
 import { Button, Card, Chips, Field, Notice } from '@/components/ui/UI';
 import { Loading } from '@/components/staff/DashboardUI';
-import { MacroChips } from '@/components/nutrition/NutritionUI';
+import { FoodPicture, MacroChips } from '@/components/nutrition/NutritionUI';
 import { SUPER as p } from '@/theme/palettes';
 
 export default function FoodFormRoute() {
@@ -143,9 +142,9 @@ function FoodForm({ categories, food }: { categories: FoodCategory[]; food: Food
       <Card p={p} style={{ gap: 14 }}>
         <Label text="Food type (optional)" />
         <Chips p={p} value={diet} onChange={setDiet} options={[{ value: 'none' as const, label: 'Not set' }, ...FOOD_DIETS.map((d) => ({ value: d.value, label: d.label }))]} />
-        <Label text="Photo (optional)" />
+        <Label text="Picture (optional photo; without one, a matching food emoji is shown)" />
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
-          {image && <Image source={{ uri: image }} style={{ width: 72, height: 72, borderRadius: 14 }} contentFit="cover" />}
+          <FoodPicture p={p} name={name || 'Food'} category={categories.find((c) => c.id === categoryId)?.name} imageUrl={image} size={72} />
           <Button p={p} kind="outline" label={uploading ? 'Uploading…' : image ? 'Change photo' : 'Add a photo'} icon="image-outline"
             loading={uploading} onPress={pickPhoto} />
           {image && <Button p={p} kind="outline" label="Remove" icon="close" onPress={() => setImage(null)} />}
