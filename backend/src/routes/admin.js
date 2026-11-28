@@ -161,6 +161,8 @@ adminRouter.get('/overview', requireRole('super_admin'), async (_req, res) => {
       SELECT (SELECT count(*)::int FROM workout_videos) AS videos,
              (SELECT count(*)::int FROM workout_categories) AS categories,
              (SELECT count(*)::int FROM workouts) AS workouts_sent,
+             (SELECT count(*)::int FROM foods) AS foods,
+             (SELECT count(*)::int FROM nutrition_plans) AS nutrition_plans,
              (SELECT count(*)::int FROM workouts w WHERE EXISTS (SELECT 1 FROM workout_items i WHERE i.workout_id = w.id)
                 AND NOT EXISTS (SELECT 1 FROM workout_items i WHERE i.workout_id = w.id AND i.completed_at IS NULL)) AS workouts_completed`),
   ]);
@@ -186,6 +188,8 @@ adminRouter.get('/overview', requireRole('super_admin'), async (_req, res) => {
       categories: library.rows[0].categories,
       workoutsSent: library.rows[0].workouts_sent,
       workoutsCompleted: library.rows[0].workouts_completed,
+      foods: library.rows[0].foods,
+      nutritionPlans: library.rows[0].nutrition_plans,
     },
   });
 });

@@ -69,7 +69,7 @@ export interface SuperOverview {
   };
   invitations: { pending: number; used: number; expired: number; revoked: number; latest: Invitation[] };
   trainers: TrainerSummary[];
-  library: { videos: number; categories: number; workoutsSent: number; workoutsCompleted: number };
+  library: { videos: number; categories: number; workoutsSent: number; workoutsCompleted: number; foods: number; nutritionPlans: number };
 }
 
 export interface TrainerSummary extends User {

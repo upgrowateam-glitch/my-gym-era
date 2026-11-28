@@ -5,16 +5,14 @@
 // "Send a workout". The server checks the same rules.
 
 import { useState } from 'react';
-import { Pressable, Text, TextInput, View } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
+import { Text, View } from 'react-native';
 import { router } from 'expo-router';
-import { ApiError } from '@/lib/api';
 import { useApi } from '@/lib/useApi';
-import { confirm } from '@/lib/confirm';
-import { BODY_PARTS, DIFFICULTIES, library, type BodyPart, type Category, type Difficulty } from '@/lib/workouts';
+import { BODY_PARTS, DIFFICULTIES, library, type BodyPart, type Difficulty } from '@/lib/workouts';
 import { Button, Chips, Empty, Field, Notice, type Palette } from '@/components/ui/UI';
-import { Kpi, KpiRow, Loading, Panel } from '@/components/staff/DashboardUI';
+import { Kpi, KpiRow, Loading } from '@/components/staff/DashboardUI';
 import { VideoCard } from './VideoCard';
+import { CategoryManager } from './CategoryManager';
 
 export function LibraryScreen({ p, canEdit, canSend }: { p: Palette; canEdit: boolean; canSend: boolean }) {
   const cats = useApi(library.categories);
@@ -52,7 +50,12 @@ export function LibraryScreen({ p, canEdit, canSend }: { p: Palette; canEdit: bo
         {canSend && <Button p={p} label="Send a workout" icon="paper-plane-outline" onPress={() => router.push('/send-workout')} />}
       </View>
 
-      {canEdit && showCats && <CategoryManager p={p} categories={cats.data} reload={() => { void cats.reload(); void vids.reload(); }} />}
+      {canEdit && showCats && (
+        <CategoryManager p={p} word="video" placeholder="e.g. Strength, Cardio, Yoga"
+          categories={cats.data?.map((c) => ({ id: c.id, name: c.name, count: c.videoCount })) ?? null}
+          actions={{ add: library.addCategory, rename: library.renameCategory, remove: library.deleteCategory }}
+          reload={() => { void cats.reload(); void vids.reload(); }} />
+      )}
 
       {(cats.error || vids.error) && <Notice text={(cats.error ?? vids.error)!} />}
 
@@ -99,85 +102,5 @@ function Group({ p, label, children }: { p: Palette; label: string; children: Re
       <Text style={{ color: p.textSecondary, fontSize: 12.5, fontWeight: '700', letterSpacing: 0.3 }}>{label}</Text>
       {children}
     </View>
-  );
-}
-
-/** Add, rename and delete categories (Super Admin / Admins). */
-function CategoryManager({ p, categories, reload }: { p: Palette; categories: Category[] | null; reload: () => void }) {
-  const [name, setName] = useState('');
-  const [editId, setEditId] = useState<string | null>(null);
-  const [editName, setEditName] = useState('');
-  const [busy, setBusy] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-
-  async function run(action: () => Promise<unknown>) {
-    setBusy(true);
-    setError(null);
-    try {
-      await action();
-      reload();
-    } catch (e) {
-      setError(e instanceof ApiError ? e.message : 'Something went wrong. Please try again.');
-    } finally {
-      setBusy(false);
-    }
-  }
-
-  return (
-    <Panel title="Categories" icon="albums-outline">
-      <View style={{ flexDirection: 'row', gap: 10, alignItems: 'flex-end' }}>
-        <View style={{ flex: 1 }}>
-          <Field p={p} label="New category" icon="add-circle-outline" value={name} onChangeText={setName} placeholder="e.g. Strength, Cardio, Yoga"
-            onSubmitEditing={() => name.trim() && run(async () => { await library.addCategory(name.trim()); setName(''); })} />
-        </View>
-        <Button p={p} label="Add" icon="add" loading={busy} disabled={!name.trim()}
-          onPress={() => run(async () => { await library.addCategory(name.trim()); setName(''); })} />
-      </View>
-      {error && <Notice text={error} />}
-      {categories === null ? <Loading /> : categories.length === 0
-        ? <Text style={{ color: p.textSecondary }}>No categories yet.</Text>
-        : categories.map((c) => (
-          <View key={c.id} style={{ flexDirection: 'row', alignItems: 'center', gap: 10, paddingVertical: 4 }}>
-            <Ionicons name="albums-outline" size={18} color={p.accent} />
-            {editId === c.id ? (
-              <TextInput value={editName} onChangeText={setEditName} autoFocus selectionColor={p.accent}
-                style={{ flex: 1, color: p.text, fontSize: 15, borderBottomWidth: 1, borderColor: p.accent, paddingVertical: 4, outlineStyle: 'none' } as never}
-                onSubmitEditing={() => run(async () => { await library.renameCategory(c.id, editName.trim()); setEditId(null); })} />
-            ) : (
-              <Text style={{ flex: 1, color: p.text, fontSize: 15, fontWeight: '700' }} numberOfLines={1}>
-                {c.name} <Text style={{ color: p.textSecondary, fontWeight: '400', fontSize: 13 }}>· {c.videoCount} {c.videoCount === 1 ? 'video' : 'videos'}</Text>
-              </Text>
-            )}
-            {editId === c.id ? (
-              <>
-                <IconBtn p={p} icon="checkmark" label="Save" disabled={busy}
-                  onPress={() => run(async () => { await library.renameCategory(c.id, editName.trim()); setEditId(null); })} />
-                <IconBtn p={p} icon="close" label="Cancel" onPress={() => setEditId(null)} />
-              </>
-            ) : (
-              <>
-                <IconBtn p={p} icon="create-outline" label="Rename" onPress={() => { setEditId(c.id); setEditName(c.name); }} />
-                <IconBtn p={p} icon="trash-outline" label="Delete" danger disabled={busy}
-                  onPress={async () => {
-                    if (await confirm(`Delete "${c.name}"?`, c.videoCount ? 'It still has videos: move or delete them first.' : 'This category will be removed.', 'Delete')) {
-                      void run(() => library.deleteCategory(c.id));
-                    }
-                  }} />
-              </>
-            )}
-          </View>
-        ))}
-    </Panel>
-  );
-}
-
-function IconBtn({ p, icon, label, onPress, danger, disabled }: {
-  p: Palette; icon: keyof typeof Ionicons.glyphMap; label: string; onPress: () => void; danger?: boolean; disabled?: boolean;
-}) {
-  return (
-    <Pressable onPress={onPress} disabled={disabled} accessibilityLabel={label} hitSlop={6}
-      style={{ width: 36, height: 36, borderRadius: 18, alignItems: 'center', justifyContent: 'center', backgroundColor: p.elevated, opacity: disabled ? 0.5 : 1 }}>
-      <Ionicons name={icon} size={18} color={danger ? '#EF5350' : p.accent} />
-    </Pressable>
   );
 }

@@ -138,8 +138,11 @@ export const workouts = {
     api.patch<{ workout: Workout }>(`/api/workouts/${id}/items/${itemId}`, { done }).then((r) => r.workout),
 };
 
-/** Uploads a picked video (or image) file; returns its web address. */
-export async function uploadFile(asset: { uri: string; fileName?: string | null; mimeType?: string; file?: File }): Promise<string> {
+/** Uploads a picked video or picture (workout videos, food photos); returns its web address. */
+export async function uploadFile(
+  asset: { uri: string; fileName?: string | null; mimeType?: string; file?: File },
+  kind: 'workouts' | 'foods' = 'workouts',
+): Promise<string> {
   const form = new FormData();
   const name = asset.fileName || `video-${Date.now()}.mp4`;
   if (Platform.OS === 'web') {
@@ -149,5 +152,5 @@ export async function uploadFile(asset: { uri: string; fileName?: string | null;
     // React Native's FormData takes { uri, name, type } for a file on the phone.
     form.append('file', { uri: asset.uri, name, type: asset.mimeType || 'video/mp4' } as unknown as Blob);
   }
-  return (await api.upload<{ url: string }>('/api/uploads/media', form, { kind: 'workouts' })).url;
+  return (await api.upload<{ url: string }>('/api/uploads/media', form, { kind })).url;
 }

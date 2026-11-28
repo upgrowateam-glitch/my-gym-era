@@ -19,6 +19,7 @@ import {
 } from '@/components/staff/DashboardUI';
 import { ADMIN as p } from '@/theme/palettes';
 import { library } from '@/lib/workouts';
+import { foodsApi } from '@/lib/nutrition';
 
 const go = (href: Href) => router.push(href);
 const NEEDS_VIEW_USERS = 'Needs the "View all users" access from the Super Admin.';
@@ -39,14 +40,16 @@ export default function AdminDashboard() {
   const inviteTrainers = can(user, 'invite_trainers');
 
   const data = useApi(async () => {
-    const [stats, trainers, users, categories, videos] = await Promise.all([
+    const [stats, trainers, users, categories, videos, foods, foodCategories] = await Promise.all([
       api.get<AdminStats>('/api/admin/stats'),
       api.get<{ trainers: TrainerSummary[] }>('/api/admin/trainers').then((r) => r.trainers),
       viewUsers ? api.get<{ users: User[] }>('/api/users', { role: 'client' }).then((r) => r.users) : Promise.resolve(null),
       library.categories().then((r) => r.length),
       library.videos(),
+      foodsApi.foods().then((r) => r.length),
+      foodsApi.categories().then((r) => r.length),
     ]);
-    return { stats, trainers, users, categories, videos: videos.length, minutes: videos.reduce((n, v) => n + v.durationMinutes, 0) };
+    return { stats, trainers, users, categories, videos: videos.length, minutes: videos.reduce((n, v) => n + v.durationMinutes, 0), foods, foodCategories };
   });
   const d = data.data;
 
@@ -162,8 +165,15 @@ export default function AdminDashboard() {
                 )}
                 <Button p={p} label="Add a video" icon="add" onPress={() => go('/video-form')} />
               </Panel>
-              <Panel title="Food & nutrition management" icon="nutrition-outline">
-                <Locked icon="construct-outline" text="The master food database arrives in the nutrition library phase." />
+              <Panel title="Food & nutrition management" icon="nutrition-outline"
+                action={{ label: 'Foods', onPress: () => go({ pathname: '/admin/library', params: { section: 'foods' } }) }}>
+                {!d ? <Loading /> : (
+                  <MiniRow>
+                    <Mini label="Foods" value={fmt(d.foods)} />
+                    <Mini label="Food categories" value={fmt(d.foodCategories)} />
+                  </MiniRow>
+                )}
+                <Button p={p} label="Add a food" icon="add" onPress={() => go('/food-form')} />
               </Panel>
               <Panel title="User progress overview" icon="trending-up-outline">
                 <Locked icon="construct-outline" text="Progress (workouts done, weight, activity) arrives with progress tracking." />

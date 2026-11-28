@@ -24,6 +24,7 @@ import { Avatar, Badge, Notice, ToggleRow } from '@/components/ui/UI';
 import { TrainerAssign } from '@/components/TrainerAssign';
 import { WorkoutRow } from '@/components/library/WorkoutList';
 import { workouts } from '@/lib/workouts';
+import { plansApi } from '@/lib/nutrition';
 import { dashboardStyles, Grid, Loading, Mini, MiniRow, Muted, Panel, shortDate, TWO_COLUMNS_MIN, AMBER } from '@/components/staff/DashboardUI';
 import { SUPER as p } from '@/theme/palettes';
 
@@ -74,6 +75,7 @@ function MemberProfile() {
                 : null} />
           )}
           {d && <WorkoutsPanel userId={d.account.uid} active={!d.account.isArchived} />}
+          {d && <NutritionPanel userId={d.account.uid} active={!d.account.isArchived} />}
         </View>
       </ScrollView>
     </SafeAreaView>
@@ -255,6 +257,29 @@ function ManagePanel({ account: u, onChange }: { account: User; onChange: (u: Us
         }, 'Could not update the account.')} />
       {(error || trainers.error) && <Notice text={(error ?? trainers.error)!} />}
       {info && <Notice kind="info" text={info} />}
+    </Panel>
+  );
+}
+
+/** The user's current nutrition plan (totals) and earlier plans. */
+function NutritionPanel({ userId, active }: { userId: string; active: boolean }) {
+  const data = useApi(() => plansApi.of(userId));
+  const current = data.data?.current ?? null;
+  return (
+    <Panel title="Nutrition plan" icon="nutrition-outline"
+      action={active ? { label: current ? 'Edit plan' : 'Create plan', onPress: () => router.push({ pathname: '/nutrition-plan', params: { userId } }) } : undefined}>
+      {data.error && <Notice text={data.error} />}
+      {!data.data && !data.error ? <Loading /> : !current ? <Muted>No nutrition plan yet.</Muted> : (
+        <Pressable onPress={() => router.push(`/nutrition/${current.id}`)} accessibilityRole="button" style={{ gap: 6 }}>
+          <Text style={{ color: p.text, fontSize: 15.5, fontWeight: '800' }}>{current.title}</Text>
+          <Text style={{ color: p.textSecondary, fontSize: 13 }}>
+            {current.totals.calories} kcal · protein {current.totals.protein} g · carbs {current.totals.carbs} g · fat {current.totals.fat} g
+          </Text>
+          <Text style={{ color: p.accent, fontSize: 13, fontWeight: '700' }}>
+            Open plan{(data.data?.history.length ?? 0) > 0 ? ` · ${data.data!.history.length} earlier` : ''} ›
+          </Text>
+        </Pressable>
+      )}
     </Panel>
   );
 }

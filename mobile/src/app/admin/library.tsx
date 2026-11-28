@@ -1,15 +1,15 @@
-// ADMIN → Workout video library.
+// ADMIN → Library: workout videos and foods & nutrition.
 
 import { can, useAuth } from '@/lib/auth';
-import { LibraryScreen } from '@/components/library/LibraryScreen';
+import { LibraryHub } from '@/components/library/LibraryHub';
 import { Page } from '@/components/ui/UI';
 import { ADMIN as p } from '@/theme/palettes';
 
 export default function Library() {
   const { user } = useAuth();
   return (
-    <Page p={p} kicker="ADMIN" title="Workout Library" wide>
-      <LibraryScreen p={p} canEdit={true} canSend={can(user, 'view_users')} />
+    <Page p={p} kicker="ADMIN" title="Library" wide>
+      <LibraryHub p={p} canEdit={true} canSend={can(user, 'view_users')} />
     </Page>
   );
 }
